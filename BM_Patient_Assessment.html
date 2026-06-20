@@ -23,6 +23,10 @@
 }}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .wrap{max-width:740px;margin:0 auto;padding:10px 10px 50px}
+/* Laptop / desktop only (>=1024px): widen the column so tables and forms
+   breathe. iPad portrait (768px) and phones stay below this breakpoint and
+   are completely unaffected. */
+@media(min-width:1024px){.wrap{max-width:1150px;padding:14px 18px 60px}}
 .clinic-hdr{background:var(--bd);border-radius:16px;padding:15px 18px 13px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden}
 .clinic-hdr::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
 .ch-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
@@ -233,6 +237,21 @@ try {
   }
 } catch(e) {}
 
+/* Migration: phone used to be stored per-visit under visit.nrs.phone.
+   It's a patient-level detail, so lift it onto patient.info.phone once. */
+try {
+  for (var _pi = 0; _pi < DB.patients.length; _pi++) {
+    var _p = DB.patients[_pi];
+    if (!_p.info) _p.info = {};
+    if (!_p.info.phone) {
+      for (var _vi = 0; _vi < (_p.visits || []).length; _vi++) {
+        var _vn = _p.visits[_vi] && _p.visits[_vi].nrs;
+        if (_vn && _vn.phone) { _p.info.phone = _vn.phone; break; }
+      }
+    }
+  }
+} catch(e) {}
+
 var CUR = null, CV = 0, CT = 'info', BMT = 'pain';
 
 function gid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
@@ -399,7 +418,7 @@ function doCollect() {
   var clEls = f.querySelectorAll('[data-cl]');
   for (var i = 0; i < clEls.length; i++) { DB.clinic[clEls[i].dataset.cl] = clEls[i].value; }
 
-  var infoKeys = ['name','age','gender','occupation'];
+  var infoKeys = ['name','age','gender','occupation','location','referredBy','phone'];
   for (var i = 0; i < infoKeys.length; i++) {
     var el = f.querySelector('[data-info="'+infoKeys[i]+'"]');
     if (el) pi[infoKeys[i]] = el.value;
@@ -544,7 +563,7 @@ function rInfo(v,pi) {
   +'<div class="fld"><label>Gender</label>'+fselInfo('gender',pi.gender||'',['Male','Female','Other'])+'</div></div>'
   +'<div class="g3"><div class="fld"><label>Location / City</label><input data-info="location" value="'+esc(pi.location||'')+'" oninput="doCollect()" type="text" placeholder="e.g. Hyderabad"></div>'
   +'<div class="fld"><label>Occupation / Sport</label><input data-info="occupation" value="'+esc(pi.occupation||'')+'" oninput="doCollect()" type="text"></div>'
-  +'<div class="fld"><label>Phone</label>'+fi('nrs.phone',v.nrs&&v.nrs.phone||'','Phone number')+'</div></div>'
+  +'<div class="fld"><label>Phone</label><input data-info="phone" value="'+esc(pi.phone||'')+'" oninput="doCollect()" type="tel" placeholder="Phone number"></div></div>'
   +'<div class="g2"><div class="fld"><label>Visit date</label>'+fd('date',v.date)+'</div>'
   +'<div class="fld"><label>Referred by</label><input data-info="referredBy" value="'+esc(pi.referredBy||'')+'" oninput="doCollect()" type="text" placeholder="GP, specialist, self..."></div></div>'
   +'</div></div>'
@@ -610,24 +629,6 @@ function rBody(v) {
   +'</div></div></form>';
 }
 
-function setBMT(t) {
-  BMT = t;
-  var COLS = {pain:'#E24B4A',numbness:'#534AB7',stiffness:'#BA7517',referred:'#1D9E75'};
-  var keys = ['pain','numbness','stiffness','referred'];
-  for (var i=0;i<keys.length;i++) {
-    var k=keys[i]; var el=document.getElementById('mkb_'+k); if(!el)continue;
-    if(k===t){el.style.background=COLS[k];el.style.borderColor=COLS[k];el.style.color='#fff';}
-    else{el.style.background='';el.style.borderColor='';el.style.color='';}
-  }
-}
-
-function clearMarks() {
-  if(!CUR)return;
-  var v=CUR.visits[CV];
-  if(!v.bodyChart)v.bodyChart={marks:[],notes:''};
-  v.bodyChart.marks=[];
-  sv();drawBody(v);
-}
 function setBMT(t) {
   BMT = t;
   var COLS = {pain:'#E24B4A',numbness:'#534AB7',stiffness:'#BA7517',referred:'#1D9E75'};
@@ -1285,9 +1286,9 @@ function rBilling(v) {
     var it=b.items[i]; var amt=(parseFloat(it.qty)||0)*(parseFloat(it.rate)||0);
     linesHtml+='<div class="bl-line">'
       +'<input data-bl="'+i+'.desc" value="'+esc(it.desc||'')+'" placeholder="Description" oninput="doCollect()" type="text">'
-      +'<input data-bl="'+i+'.qty" value="'+(it.qty||1)+'" type="number" min="0.5" step="0.5" oninput="doCollect()">'
-      +'<input data-bl="'+i+'.rate" value="'+(it.rate||'')+'" type="number" oninput="doCollect()" placeholder="Rate">'
-      +'<input value="'+cur+amt.toFixed(2)+'" readonly style="background:var(--bg);color:var(--muted)">'
+      +'<input data-bl="'+i+'.qty" value="'+(it.qty||1)+'" type="number" min="0.5" step="0.5" oninput="doCollect();recalcBill()">'
+      +'<input data-bl="'+i+'.rate" value="'+(it.rate||'')+'" type="number" oninput="doCollect();recalcBill()" placeholder="Rate">'
+      +'<input id="blAmt'+i+'" value="'+cur+amt.toFixed(2)+'" readonly style="background:var(--bg);color:var(--muted)">'
       +'<button type="button" onclick="removeLine('+i+')" style="border:none;background:transparent;cursor:pointer;color:var(--r);font-size:20px;line-height:1;padding:0">×</button>'
       +'</div>';
   }
@@ -1312,12 +1313,30 @@ function rBilling(v) {
   +'</div>'
   +(linesHtml||'<div style="font-size:11px;color:var(--muted);padding:8px 0">No items — tap ＋ Add</div>')
   +'<div class="bl-tot">'
-  +'<div class="btr"><span style="color:var(--muted)">Subtotal</span><span>'+cur+sub.toFixed(2)+'</span></div>'
-  +(tax?'<div class="btr"><span style="color:var(--muted)">'+(DB.clinic.taxLabel||'Tax')+' ('+tax+'%)</span><span>'+cur+taxAmt.toFixed(2)+'</span></div>':'')
-  +'<div class="btr"><span>Total</span><span>'+cur+total.toFixed(2)+'</span></div>'
+  +'<div class="btr"><span style="color:var(--muted)">Subtotal</span><span id="blSub">'+cur+sub.toFixed(2)+'</span></div>'
+  +(tax?'<div class="btr"><span style="color:var(--muted)">'+(DB.clinic.taxLabel||'Tax')+' ('+tax+'%)</span><span id="blTaxAmt">'+cur+taxAmt.toFixed(2)+'</span></div>':'')
+  +'<div class="btr"><span>Total</span><span id="blTot">'+cur+total.toFixed(2)+'</span></div>'
   +'</div>'
   +'<div class="fld" style="margin-top:10px"><label>Notes</label>'+ft('billing.notes',b.notes||'','',52)+'</div>'
   +'</div></div></form>';
+}
+/* Recompute amounts and totals in place — keeps focus while typing qty/rate */
+function recalcBill(){
+  if(!CUR)return;
+  var v=CUR.visits[CV]; if(!v||!v.billing)return;
+  var items=v.billing.items||[];
+  var cur=DB.clinic.currency||'₹';
+  var tax=parseFloat(DB.clinic.taxRate)||0;
+  var sub=0;
+  for(var i=0;i<items.length;i++){
+    var amt=(parseFloat(items[i].qty)||0)*(parseFloat(items[i].rate)||0);
+    sub+=amt;
+    var el=document.getElementById('blAmt'+i); if(el)el.value=cur+amt.toFixed(2);
+  }
+  var taxAmt=sub*(tax/100); var total=sub+taxAmt;
+  var s=document.getElementById('blSub'); if(s)s.textContent=cur+sub.toFixed(2);
+  var ta=document.getElementById('blTaxAmt'); if(ta)ta.textContent=cur+taxAmt.toFixed(2);
+  var t=document.getElementById('blTot'); if(t)t.textContent=cur+total.toFixed(2);
 }
 function addLine(){if(!CUR)return;doCollect();var v=CUR.visits[CV];if(!v.billing)v.billing={items:[]};v.billing.items.push({desc:'',qty:1,rate:''});sv();renderTab('billing');}
 function removeLine(i){if(!CUR)return;doCollect();CUR.visits[CV].billing.items.splice(i,1);sv();renderTab('billing');}
@@ -1796,7 +1815,8 @@ function syncServer() {
       }
     }
     setStatus('Synced ' + new Date().toLocaleTimeString(), true);
-    showToast('Sync complete ✓ · ' + data.patients.length + ' patients');
+    var _cnt = (data.patients ? data.patients.length : DB.patients.length);
+    showToast('Sync complete ✓ · ' + _cnt + ' patients');
   })
   .catch(function(err) {
     setStatus('Server unreachable', false);
