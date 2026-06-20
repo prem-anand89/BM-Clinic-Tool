@@ -429,7 +429,7 @@ function doCollect() {
   /* Update timestamp on the current patient so sync knows it changed */
   if (CUR) { CUR._local_updated = new Date().toISOString(); }
 
-  sv();
+  return sv();
 }
 
 /* ─── RENDER SIDEBAR ─── */
@@ -1259,17 +1259,25 @@ function handleFiles(input){
   if(!CUR)return;
   var v=CUR.visits[CV];
   if(!v.attachments)v.attachments=[];
+  var startLen=v.attachments.length;
   var files=input.files; var total=files.length,done=0;
   for(var i=0;i<files.length;i++){
     (function(file){
       var reader=new FileReader();
       reader.onload=function(e){
         v.attachments.push({name:file.name,type:file.type,data:e.target.result,date:new Date().toLocaleDateString()});
-        done++;if(done===total){sv();renderTab('files');}
+        done++;
+        if(done===total){
+          /* If the save fails (e.g. storage full), drop the new files rather
+             than leave them in memory pretending they were saved. */
+          if(!sv()) v.attachments.length=startLen;
+          renderTab('files');
+        }
       };
       reader.readAsDataURL(file);
     })(files[i]);
   }
+  input.value='';   /* let the same file be re-selected later */
 }
 function removeFile(i){if(!CUR)return;CUR.visits[CV].attachments.splice(i,1);sv();renderTab('files');}
 
@@ -1659,7 +1667,17 @@ function sv() {
     }
     localStorage.setItem('bm_v6', JSON.stringify(DB));
     localStorage.setItem('bm_dirty', '1');   /* flag: unsynced changes exist */
-  } catch(e) {}
+    return true;
+  } catch(e) {
+    /* Most common cause: localStorage quota exceeded (large photo/scan
+       attachments) or private-browsing mode. Surface it instead of losing
+       data silently. */
+    try {
+      if (typeof showToast === 'function')
+        showToast('⚠ Could not save — storage full. Remove large attachments or export a backup.', true);
+    } catch(_e) {}
+    return false;
+  }
 }
 
 /* ── Mark a patient as just changed ── */
@@ -1924,7 +1942,8 @@ function showToast(msg, isErr) {
 /* ─── SEARCH / FILTER ─── */
 /* ─── AUTO-SAVE WITH TIMESTAMP ─── */
 function doCollectAndSave() {
-  doCollect();
+  var ok = doCollect();
+  if (ok === false) return;   /* sv() already showed the storage-full warning */
   var btn = document.getElementById('saveBtn');
   if (btn) {
     var t = new Date();
