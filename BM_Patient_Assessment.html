@@ -1252,34 +1252,91 @@ function rFiles(v) {
   +'<button type="button" onclick="document.getElementById(\'fIn\').click()" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;margin-left:auto">＋ Upload</button>'
   +'</div><div class="cb">'
   +'<input type="file" id="fIn" style="display:none" multiple accept="image/*,.pdf,.doc,.docx" onchange="handleFiles(this)">'
+  +(function(){
+     var su=storageUsage();
+     var col=su.pct>=90?'#E24B4A':su.pct>=70?'#BA7517':'#1D9E75';
+     return '<div style="margin-bottom:12px">'
+       +'<div style="display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px"><span>Storage used</span><span>'+fmtBytes(su.used)+' / '+fmtBytes(su.limit)+' · '+su.pct+'%</span></div>'
+       +'<div style="height:7px;border-radius:5px;background:var(--bg);border:1px solid var(--brd);overflow:hidden"><div style="height:100%;width:'+su.pct+'%;background:'+col+';transition:width .3s"></div></div>'
+       +(su.pct>=85?'<div style="font-size:10px;color:#E24B4A;margin-top:5px;font-weight:600">Storage almost full — export a backup and remove old attachments.</div>':'')
+       +'<div style="font-size:9px;color:var(--sub);margin-top:5px">Photos are auto-compressed on upload to save space.</div>'
+       +'</div>';
+   })()
   +(atts.length?'<div class="att-g">'+cards+'</div>':'<div class="att-em">📁<br>No files — tap Upload</div>')
   +'</div></div></form>';
 }
+/* Downscale + re-encode a photo before storing so far more scans fit in the
+   ~5MB localStorage budget. Falls back to the original if anything fails or
+   the compressed version isn't actually smaller. */
+function compressImage(file, cb){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var orig=e.target.result;
+    var img=new Image();
+    img.onload=function(){
+      try{
+        var MAX=1600;
+        var w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+        if(w>MAX||h>MAX){ var sc=Math.min(MAX/w,MAX/h); w=Math.round(w*sc); h=Math.round(h*sc); }
+        var c=document.createElement('canvas'); c.width=w; c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        var out=c.toDataURL('image/jpeg',0.82);
+        if(out && out.length < orig.length) cb(out,'image/jpeg');
+        else cb(orig, file.type);
+      }catch(err){ cb(orig, file.type); }
+    };
+    img.onerror=function(){ cb(orig, file.type); };
+    img.src=orig;
+  };
+  reader.onerror=function(){ cb(null,null); };
+  reader.readAsDataURL(file);
+}
+
 function handleFiles(input){
   if(!CUR)return;
   var v=CUR.visits[CV];
   if(!v.attachments)v.attachments=[];
   var startLen=v.attachments.length;
   var files=input.files; var total=files.length,done=0;
+  function finalize(){
+    done++;
+    if(done===total){
+      /* If the save fails (e.g. storage full), drop the new files rather
+         than leave them in memory pretending they were saved. */
+      if(!sv()) v.attachments.length=startLen;
+      renderTab('files');
+    }
+  }
   for(var i=0;i<files.length;i++){
     (function(file){
-      var reader=new FileReader();
-      reader.onload=function(e){
-        v.attachments.push({name:file.name,type:file.type,data:e.target.result,date:new Date().toLocaleDateString()});
-        done++;
-        if(done===total){
-          /* If the save fails (e.g. storage full), drop the new files rather
-             than leave them in memory pretending they were saved. */
-          if(!sv()) v.attachments.length=startLen;
-          renderTab('files');
-        }
-      };
-      reader.readAsDataURL(file);
+      if(file.type && file.type.indexOf('image/')===0 && file.type.indexOf('image/svg')!==0){
+        compressImage(file,function(data,type){
+          if(data) v.attachments.push({name:file.name,type:type||file.type,data:data,date:new Date().toLocaleDateString()});
+          finalize();
+        });
+      } else {
+        var reader=new FileReader();
+        reader.onload=function(e){
+          v.attachments.push({name:file.name,type:file.type,data:e.target.result,date:new Date().toLocaleDateString()});
+          finalize();
+        };
+        reader.onerror=function(){ finalize(); };
+        reader.readAsDataURL(file);
+      }
     })(files[i]);
   }
   input.value='';   /* let the same file be re-selected later */
 }
 function removeFile(i){if(!CUR)return;CUR.visits[CV].attachments.splice(i,1);sv();renderTab('files');}
+
+/* ── Storage usage (localStorage is the only store; ~5MB budget) ── */
+function fmtBytes(n){ if(n<1024)return n+' B'; if(n<1048576)return (n/1024).toFixed(0)+' KB'; return (n/1048576).toFixed(2)+' MB'; }
+function storageUsage(){
+  var used=0;
+  try{ used=(localStorage.getItem('bm_v6')||'').length; }catch(e){}
+  var limit=5*1024*1024;
+  return { used:used, limit:limit, pct:Math.min(100, Math.round(used/limit*100)) };
+}
 
 /* ─── BILLING ─── */
 function rBilling(v) {
