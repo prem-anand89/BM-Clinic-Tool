@@ -704,7 +704,6 @@ function fsel(f,val,opts){
   for(var i=0;i<opts.length;i++) s+='<option'+(val===opts[i]?' selected':'')+'>'+opts[i]+'</option>';
   return s+'</select>';
 }
-function sbtn(label){ return '<button type="button" onclick="'+label+'" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;margin-left:auto">＋ Add</button>'; }
 
 /* ─── INFO TAB ─── */
 function rInfo(v,pi) {
@@ -969,7 +968,6 @@ function rFM(v) {
   var fm = v.fm || {};
   var segs = fm.segments || [];
   var pvC  = fm.pvCoord  || [];
-  var pvF  = fm.pvFusion || [];
   var hPP  = fm.histPaPrev  || [];
   var hTR  = fm.histTrauma  || [];
   var hSU  = fm.histSurgery || [];
@@ -1053,7 +1051,6 @@ function rFM(v) {
     pvCHtml+='<td style="width:22px;padding:1px"><button type="button" onclick="delPVC('+i+')" style="border:none;background:transparent;cursor:pointer;color:var(--r);font-size:15px;line-height:1;padding:2px">×</button></td>';
     pvCHtml+='</tr>';
   }
-  var pvFHtml='';
 
   return '<form id="ptForm" onsubmit="return false">'
 
@@ -1143,8 +1140,6 @@ function addSeg(){if(!CUR)return;doCollect();var v=CUR.visits[CV];if(!v.fm.segme
 function delSeg(i){if(!CUR)return;doCollect();var v=CUR.visits[CV];v.fm.segments.splice(i,1);sv();renderTab('fm');}
 function addPVC(){if(!CUR)return;doCollect();var v=CUR.visits[CV];if(!v.fm.pvCoord)v.fm.pvCoord=[];v.fm.pvCoord.push({});sv();renderTab('fm');}
 function delPVC(i){if(!CUR)return;doCollect();var v=CUR.visits[CV];v.fm.pvCoord.splice(i,1);sv();renderTab('fm');}
-function addPVF(){if(!CUR)return;doCollect();var v=CUR.visits[CV];if(!v.fm.pvFusion)v.fm.pvFusion=[];v.fm.pvFusion.push({});sv();renderTab('fm');}
-function delPVF(i){if(!CUR)return;doCollect();var v=CUR.visits[CV];v.fm.pvFusion.splice(i,1);sv();renderTab('fm');}
 function addHistPP(){if(!CUR)return;doCollect();var v=CUR.visits[CV];if(!v.fm.histPaPrev)v.fm.histPaPrev=[];v.fm.histPaPrev.push({});sv();renderTab('fm');}
 function delHistPP(i){if(!CUR)return;doCollect();var v=CUR.visits[CV];v.fm.histPaPrev.splice(i,1);sv();renderTab('fm');}
 function addHistTR(){if(!CUR)return;doCollect();var v=CUR.visits[CV];if(!v.fm.histTrauma)v.fm.histTrauma=[];v.fm.histTrauma.push({});sv();renderTab('fm');}
@@ -2174,12 +2169,6 @@ function sv() {
 }
 
 /* ── Mark a patient as just changed ── */
-function touchPt(id) {
-  var now = new Date().toISOString();
-  for (var i = 0; i < DB.patients.length; i++) {
-    if (DB.patients[i].id === id) { DB.patients[i]._local_updated = now; break; }
-  }
-}
 
 /* ── Smart merge: newest version of each patient wins, deleted IDs excluded ── */
 function mergePatients(local, remote) {
@@ -2471,33 +2460,6 @@ function toggleRedFlag(key) {
 }
 
 /* ─── RED FLAGS COLLECT ─── */
-function collectRedFlags() {
-  if (!CUR) return;
-  var v = CUR.visits[CV];
-  if (!v.msk) v.msk = {};
-  if (!v.msk.redFlags) v.msk.redFlags = {};
-  var f = document.getElementById('ptForm');
-  if (!f) return;
-  /* Save all checkbox states immediately without triggering full doCollect */
-  var checkboxes = f.querySelectorAll('[data-rf]');
-  for (var i = 0; i < checkboxes.length; i++) {
-    v.msk.redFlags[checkboxes[i].dataset.rf] = checkboxes[i].checked ? '1' : '0';
-  }
-  /* Also save any text fields in the form that may have changed */
-  var dataFs = f.querySelectorAll('[data-f]');
-  for (var i = 0; i < dataFs.length; i++) {
-    var el = dataFs[i];
-    var path = el.dataset.f.split('.');
-    var obj = v;
-    for (var j = 0; j < path.length - 1; j++) {
-      if (obj[path[j]] === undefined || obj[path[j]] === null) obj[path[j]] = {};
-      obj = obj[path[j]];
-    }
-    obj[path[path.length-1]] = el.value;
-  }
-  CUR._local_updated = new Date().toISOString();
-  sv();
-}
 
 /* ─── PSFS HELPER ─── */
 function psfsRows(n) {
