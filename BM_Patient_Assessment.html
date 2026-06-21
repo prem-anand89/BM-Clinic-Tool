@@ -18,9 +18,20 @@
   --pu:#2f5d8a;--puL:#eef3f8;--puM:#c7d8e8;
   --bg:#f6f7f8;--card:#ffffff;--brd:#e6e9ec;--text:#18222b;--muted:#5b6770;--sub:#93a0a8;
 }
+/* Dark surfaces — applied automatically in OS dark mode (auto), and forced
+   by the theme toggle via html[data-theme]. Accent/brand colours are kept. */
 @media(prefers-color-scheme:dark){:root{
-  --bg:#f6f7f8;--card:#ffffff;--brd:#e6e9ec;--text:#18222b;--muted:#5b6770;--sub:#93a0a8
+  --bg:#0f1418;--card:#171f26;--brd:#2a343d;--text:#e6edf2;--muted:#9aa7b1;--sub:#6b7882;
+  --bl:#1a2530;--bm:#33485c
 }}
+html[data-theme="light"]{
+  --bg:#f6f7f8;--card:#ffffff;--brd:#e6e9ec;--text:#18222b;--muted:#5b6770;--sub:#93a0a8;
+  --bl:#eef3f8;--bm:#c7d8e8
+}
+html[data-theme="dark"]{
+  --bg:#0f1418;--card:#171f26;--brd:#2a343d;--text:#e6edf2;--muted:#9aa7b1;--sub:#6b7882;
+  --bl:#1a2530;--bm:#33485c
+}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .wrap{max-width:740px;margin:0 auto;padding:10px 10px 50px}
 /* Laptop / desktop only (>=1024px): widen the column so tables and forms
@@ -162,6 +173,21 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
   .colflow{column-count:2}
   .colflow .fullspan{column-span:all}
 }
+/* Larger, more legible type on laptops (the base sizes are tuned for phones).
+   Untouched on tablet/phone. */
+@media(min-width:1024px){
+  input,select,textarea{font-size:14px;padding:10px 12px}
+  label{font-size:10px}
+  .ct{font-size:13px}.cs{font-size:11px}
+  .cb{padding:15px 16px}
+  .fld{margin-bottom:12px}
+  textarea{line-height:1.65}
+  .tb{font-size:12px;padding:8px 14px}
+  .vp{font-size:11px}
+  .inote{font-size:12px}
+  .fm-t,.pv-t,.hist-t,.vm-t{font-size:12px}
+  .fm-t td input,.fm-t td select,.hist-t td input,.vm-t td input,.vm-t td select{font-size:12px}
+}
 </style>
 </head>
 <body>
@@ -192,7 +218,7 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
       <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);font-size:12px">▾</span>
     </div>
     <input id="ptSearch" type="text" placeholder="🔍 Search..." oninput="filterPts(this.value)"
-      style="display:none;font-size:11px;padding:8px 10px;border:1.5px solid var(--bd);border-radius:9px;background:var(--card);color:var(--text);font-family:inherit;min-width:140px">
+      style="font-size:11px;padding:8px 10px;border:1.5px solid var(--brd);border-radius:9px;background:var(--card);color:var(--text);font-family:inherit;flex:0 1 150px;min-width:90px">
   </div>
   <div class="pt-bar-right">
     <button class="abtn grn" onclick="newPt()">＋ New</button>
@@ -206,6 +232,7 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
       </button>
       <span id="lastSyncedLabel" style="font-size:9px;color:var(--sub);white-space:nowrap;padding-right:2px"></span>
     </div>
+    <button class="abtn" onclick="cycleTheme()" title="Theme: Auto / Light / Dark" id="themeBtn">🌓</button>
     <button class="abtn" onclick="toggleServerPanel()" title="Server settings" id="srvToggle">⚙</button>
   </div>
 </div>
@@ -1518,10 +1545,10 @@ function rBilling(v) {
   var sbcls=b.status==='paid'?'sp':b.status==='partial'?'spt':'su';
   return '<form id="ptForm" onsubmit="return false">'
   +'<div class="card"><div class="ch"><div class="ci" style="background:#E1F5EE">💳</div><div><div class="ct">Invoice</div></div>'
-  +'<span class="sbadge '+sbcls+'" style="margin-left:auto">'+((b.status||'unpaid').toUpperCase())+'</span>'
+  +'<span class="sbadge '+sbcls+'" id="blStatusBadge" style="margin-left:auto">'+((b.status||'unpaid').toUpperCase())+'</span>'
   +'</div><div class="cb">'
   +'<div class="g3"><div class="fld"><label>Invoice no.</label>'+fi('billing.invoiceNo',b.invoiceNo,'INV-001')+'</div>'
-  +'<div class="fld"><label>Status</label><select data-f="billing.status" onchange="doCollect()"><option value="unpaid"'+(b.status==='unpaid'?' selected':'')+'>Unpaid</option><option value="paid"'+(b.status==='paid'?' selected':'')+'>Paid</option><option value="partial"'+(b.status==='partial'?' selected':'')+'>Partial</option></select></div>'
+  +'<div class="fld"><label>Status</label><select data-f="billing.status" onchange="doCollect();updateBillStatus(this.value)"><option value="unpaid"'+(b.status==='unpaid'?' selected':'')+'>Unpaid</option><option value="paid"'+(b.status==='paid'?' selected':'')+'>Paid</option><option value="partial"'+(b.status==='partial'?' selected':'')+'>Partial</option></select></div>'
   +'<div class="fld"><label>Payment method</label>'+fsel('billing.paymentMethod',b.paymentMethod,['Cash','Card','UPI','Bank transfer','Insurance'])+'</div></div>'
   +'<div class="g2"><div class="fld"><label>Payment date</label>'+fd('billing.paymentDate',b.paymentDate)+'</div></div>'
   +'</div></div>'
@@ -1544,6 +1571,12 @@ function rBilling(v) {
   +'</div></div></form>';
 }
 /* Recompute amounts and totals in place — keeps focus while typing qty/rate */
+/* Live-update the Paid/Unpaid/Partial badge when status changes */
+function updateBillStatus(val){
+  var el=document.getElementById('blStatusBadge'); if(!el)return;
+  el.className='sbadge '+(val==='paid'?'sp':val==='partial'?'spt':'su');
+  el.textContent=(val||'unpaid').toUpperCase();
+}
 function recalcBill(){
   if(!CUR)return;
   var v=CUR.visits[CV]; if(!v||!v.billing)return;
@@ -2006,20 +2039,42 @@ function buildFullRecordHTML() {
 
   var body='';
   for (var i=0;i<visits.length;i++){
-    var v=visits[i], n=v.nrs||{}, m=v.msk||{}, t=v.treatment||{}, ph=v.presentHistory||{};
+    var v=visits[i], n=v.nrs||{}, m=v.msk||{}, t=v.treatment||{}, ph=v.presentHistory||{}, vmO=v.vm||{}, cstO=v.cst||{};
     var nrsParts=[]; ['current','worst','best','avg'].forEach(function(k){ if(n[k]!=null) nrsParts.push(k.charAt(0).toUpperCase()+k.slice(1)+': '+n[k]+'/10'); });
     var pavg=psfsAverage(n);
     var presentParts=[]; if(ph.onset)presentParts.push('Onset: '+escHtml(ph.onset)); if(ph.duration)presentParts.push('Duration: '+escHtml(ph.duration)); if(ph.progression)presentParts.push('Progression: '+escHtml(ph.progression));
+    /* Past history */
+    var pastBits=[];
+    [['Past similar complaints',v.similarHistory],['Comorbidities',v.existingConditions],['Surgeries',v.surgeryHistory],['Trauma',v.traumaHistory],['Medications',v.currentMedications]].forEach(function(p){ if(p[1]) pastBits.push('<b>'+p[0]+':</b> '+escHtml(p[1])); });
+    /* Red flags */
+    var rfMap={neurological:'Neurological signs',weightLoss:'Unexplained weight loss',fever:'Fever / systemic illness',trauma:'Recent significant trauma',cancer:'History of cancer',nightPain:'Night/constant pain',caudalEquina:'Cauda equina symptoms'};
+    var rf=m.redFlags||{}, rpos=[]; for(var rk in rfMap){ if(Object.prototype.hasOwnProperty.call(rfMap,rk)&&rf[rk]==='1') rpos.push(rfMap[rk]); }
+    var rfStr=(rpos.length?'<b style="color:#A32D2D">Positive:</b> '+rpos.join(', '):'')+(m.redFlagNotes?(rpos.length?'<br>':'')+escHtml(m.redFlagNotes):'');
+    /* VM */
+    var vmBits=[]; if(vmO.internalDysf)vmBits.push('<b>Symptoms:</b> '+escHtml(vmO.internalDysf)); if(vmO.globalListening)vmBits.push('<b>General listening:</b> '+escHtml(vmO.globalListening)); if(vmO.localListening)vmBits.push('<b>Local listening:</b> '+escHtml(vmO.localListening));
+    if(vmO.organs){ for(var oi=0;oi<VM_ORGANS.length;oi++){ var ok=VM_ORGANS[oi].key,od=vmO.organs[ok]; if(od&&(od.tender||od.mobility||od.motility||od.findings||od.mskCorr)){ var ob=[]; if(od.tender)ob.push('tender '+od.tender); if(od.mobility)ob.push('mobility '+od.mobility); if(od.motility)ob.push('motility '+od.motility); if(od.findings)ob.push(escHtml(od.findings)); vmBits.push('<b>'+escHtml(VM_ORGANS[oi].name)+':</b> '+ob.join(', ')); } } }
+    if(vmO.technique)vmBits.push('<b>Technique:</b> '+escHtml(vmO.technique)); if(vmO.sessionResponse)vmBits.push('<b>Response:</b> '+escHtml(vmO.sessionResponse));
+    /* CST */
+    var cstBits=[]; [['CR rate',cstO.crRate],['CR quality',cstO.crQuality],['SBS',cstO.sphenobasilar],['Sacrum',cstO.sacrum],['CV4',cstO.cv4]].forEach(function(p){ if(p[1]) cstBits.push('<b>'+p[0]+':</b> '+escHtml(p[1])); });
+    if(cstO.tmjOpen||cstO.tmjDeviation)cstBits.push('<b>TMJ:</b> '+escHtml((cstO.tmjOpen?cstO.tmjOpen+' ':'')+(cstO.tmjDeviation||'')));
+    if(cstO.techniques)cstBits.push('<b>Techniques:</b> '+escHtml(cstO.techniques)); if(cstO.sessionResponse)cstBits.push('<b>Response:</b> '+escHtml(cstO.sessionResponse));
+    /* Body chart */
+    var bcUrl=''; if(v.bodyChart&&v.bodyChart.marks&&v.bodyChart.marks.length) bcUrl=bodyChartDataURL(v);
     body+='<div class="visit">'
       +'<div class="vh"><span class="vt">'+(i===0?'Initial assessment':'Follow-up '+i)+'</span><span class="vd">'+escHtml(v.date||'')+'</span></div>'
       +nbk('Chief complaint',v.chiefComplaint)
       +(presentParts.length?'<div class="sl">Present history</div><div class="sv">'+presentParts.join(' &middot; ')+(ph.details?'<br>'+escHtml(ph.details):'')+'</div>':'')
+      +(pastBits.length?'<div class="sl">Past history</div><div class="sv">'+pastBits.join('<br>')+'</div>':'')
       +(nrsParts.length||pavg!=null?'<div class="sl">Pain / function</div><div class="sv">'+nrsParts.join(' &nbsp; ')+(pavg!=null?' &nbsp; PSFS avg: '+pavg.toFixed(1)+'/10':'')+'</div>':'')
+      +(bcUrl?'<div class="sl">Body chart</div><img src="'+bcUrl+'" style="width:100%;max-width:460px;display:block;border:1px solid #ddd;border-radius:4px;margin:2px 0">'+(v.bodyChart.notes?'<div class="sv">'+escHtml(v.bodyChart.notes)+'</div>':''):'')
       +nbk('Observation',m.observation)
       +nbk('ROM',m.rom)
       +nbk('Palpation',m.palpation)
       +nbk('Special tests',m.specialTests)
+      +(rfStr?'<div class="sl">Red flags</div><div class="sv">'+rfStr+'</div>':'')
       +nbk('Diagnosis',m.diagnosis)
+      +(vmBits.length?'<div class="sl">Visceral (VM)</div><div class="sv">'+vmBits.join('<br>')+'</div>':'')
+      +(cstBits.length?'<div class="sl">Craniosacral (CST)</div><div class="sv">'+cstBits.join('<br>')+'</div>':'')
       +nbk('Treatment',t.treatment)
       +nbk('Exercise program',t.exerciseProgram)
       +nbk('Advice',t.advice)
@@ -2300,6 +2355,7 @@ function exportJSON() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  try { localStorage.setItem('bm_last_export', new Date().toISOString()); } catch(e) {}
   showToast('Backup downloaded ✓');
 }
 
@@ -2625,12 +2681,41 @@ function renderClinicHeader() {
   el.innerHTML = parts.join('');
 }
 
+/* ─── THEME (Auto / Light / Dark) ─── */
+function applyTheme() {
+  var t = '';
+  try { t = localStorage.getItem('bm_theme') || ''; } catch(e) {}
+  if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  else document.documentElement.removeAttribute('data-theme');
+  var btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = t === 'dark' ? '🌙' : t === 'light' ? '☀️' : '🌓';
+}
+function cycleTheme() {
+  var t = '';
+  try { t = localStorage.getItem('bm_theme') || ''; } catch(e) {}
+  var next = t === '' ? 'light' : t === 'light' ? 'dark' : '';
+  try { localStorage.setItem('bm_theme', next); } catch(e) {}
+  applyTheme();
+  showToast('Theme: ' + (next === '' ? 'Auto' : next.charAt(0).toUpperCase()+next.slice(1)));
+}
+
+/* ─── BACKUP REMINDER ─── */
+function maybeBackupReminder() {
+  if (!DB.patients.length) return;
+  var last = null;
+  try { last = localStorage.getItem('bm_last_export'); } catch(e) {}
+  var stale = !last || (Date.now() - new Date(last).getTime() > 7*24*60*60*1000);
+  if (stale) setTimeout(function(){ showToast('Tip: export a backup (⬇) to keep your records safe', true); }, 4000);
+}
+
 /* ─── INIT ─── */
+applyTheme();
 renderSB();
 initServerUI();
 updateSyncBadge();
 initTherapistUI();
 renderClinicHeader();
+maybeBackupReminder();
 /* Ping server on load — silently checks if we're at home on Wi-Fi */
 if (SERVER_URL) setTimeout(pingServer, 600);
 /* Re-ping every 60 seconds in case connectivity changes */
