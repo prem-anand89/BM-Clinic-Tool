@@ -33,6 +33,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #tabContent.twocol{column-count:1;column-gap:14px}
 @media(min-width:1024px){ #tabContent.twocol{column-count:2} }
 #tabContent.twocol .card{break-inside:avoid}
+/* Wide content (tables, charts) breaks out to span BOTH columns so it never
+   gets squeezed — this is what protects the FM tables. */
+@media(min-width:1024px){ #tabContent.twocol .fullspan{column-span:all} }
+.fullspan{break-inside:avoid}
+.pvtbl{width:100%;border-collapse:collapse;font-size:10px}
+.pvtbl th,.pvtbl td{border:1px solid var(--brd);padding:4px 5px;text-align:center;white-space:nowrap}
+.pvtbl th{background:var(--bl);color:var(--bd);font-weight:700;font-size:9px}
+.scroll{overflow-x:auto}
 
 .card{background:var(--card);border:1.5px solid var(--brd);border-radius:14px;margin-bottom:12px;overflow:hidden;-webkit-column-break-inside:avoid}
 .ch{padding:11px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px}
@@ -66,16 +74,40 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
   </div>
 
   <div class="tab-bar">
-    <span class="tb">📈 Overview</span>
-    <span class="tb on">👤 Info</span>
-    <span class="tb">🩻 Body chart</span>
-    <span class="tb">📊 Pain NRS</span>
-    <span class="tb">🩺 Assessment</span>
+    <span class="tb" id="tab_info" onclick="showTab('info')" style="cursor:pointer">👤 Info</span>
+    <span class="tb on" id="tab_fm" onclick="showTab('fm')" style="cursor:pointer">🔷 FM</span>
   </div>
 
-  <div class="note">↓ The Info tab below — same cards you have now, just flowing into two columns when there is room.</div>
+  <div class="note" id="demoNote">↓ <b>FM tab.</b> Notice the wide tables span the full width (never squeezed), while the small form cards pair up two-column on a laptop. Switch to the Info tab to see an all-forms tab.</div>
 
-  <div id="tabContent" class="twocol">
+  <!-- FM EXAMPLE -->
+  <div id="fmContent" class="twocol">
+    <div class="card fullspan"><div class="ch"><div class="ci" style="background:#E0F2FE">🔷</div><div class="ct">Segment assessment — Stecco FM (full width)</div></div><div class="cb">
+      <div class="scroll"><table class="pvtbl"><thead><tr><th>Segment</th><th>Side</th><th>Location</th><th>Duration</th><th>Traum?</th><th>VRS</th><th>Rec</th><th>Painful movements</th></tr></thead>
+      <tbody><tr><td>LU</td><td>rt</td><td>lateral</td><td>3w</td><td>N</td><td>6</td><td>—</td><td>Flexion, rotation</td></tr>
+      <tr><td>PV</td><td>bil</td><td>posterior</td><td>2m</td><td>N</td><td>4</td><td>—</td><td>Sitting → standing</td></tr></tbody></table></div>
+    </div></div>
+
+    <div class="card fullspan"><div class="ch"><div class="ci" style="background:#EEEDFE">📐</div><div class="ct">Palpation verification — CC's &amp; CF's (full width)</div></div><div class="cb">
+      <div class="scroll"><table class="pvtbl"><thead>
+        <tr><th rowspan="2">Date</th><th rowspan="2">Seg</th><th colspan="5">RIGHT</th><th colspan="5">LEFT</th></tr>
+        <tr><th>An</th><th>Re</th><th>Ir</th><th>Er</th><th>La</th><th>An</th><th>Re</th><th>Ir</th><th>Er</th><th>La</th></tr></thead>
+        <tbody><tr><td>06/21</td><td>LU</td><td>+</td><td></td><td>+</td><td></td><td></td><td></td><td>+</td><td></td><td></td><td></td></tr></tbody></table></div>
+    </div></div>
+
+    <div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">💡</div><div class="ct">Hypothesis</div></div><div class="cb">
+      <div class="g2"><div class="fld"><label>Sequence</label><input value="AN-CL → AN-HU"></div><div class="fld"><label>Diagonal</label><input value="AN-LA rt"></div></div>
+      <div class="fld"><label>Reasoning</label><textarea>Density at LU-rt reproduces symptoms; treat AN diagonal first.</textarea></div>
+    </div></div>
+
+    <div class="card"><div class="ch"><div class="ci" style="background:#E1F5EE">📝</div><div class="ct">Mo/Ve · Pa/Ve · Notes</div></div><div class="cb">
+      <div class="fld"><label>Movement verification</label><textarea>Rotation improved post-treatment.</textarea></div>
+      <div class="fld"><label>Treatment notes</label><textarea>Treated CF points, 2 min each.</textarea></div>
+    </div></div>
+  </div>
+
+  <!-- INFO EXAMPLE -->
+  <div id="tabContent" class="twocol" style="display:none">
     <div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">👤</div><div class="ct">Patient details</div></div><div class="cb">
       <div class="g3"><div class="fld"><label>Full name</label><input value="Jane Doe"></div><div class="fld"><label>Age</label><input value="42"></div><div class="fld"><label>Gender</label><input value="Female"></div></div>
       <div class="g3"><div class="fld"><label>Location</label><input value="Hyderabad"></div><div class="fld"><label>Occupation</label><input value="Teacher"></div><div class="fld"><label>Phone</label><input value="90000 00000"></div></div>
@@ -103,11 +135,24 @@ textarea{resize:vertical;min-height:64px;line-height:1.5}
 </div>
 
 <script>
-function setCol(two){
-  document.getElementById('tabContent').className = two ? 'twocol' : '';
-  document.getElementById('b2').className = two ? 'on' : '';
-  document.getElementById('b1').className = two ? '' : 'on';
+var twoCol = true, curTab = 'fm';
+function apply(){
+  var cls = twoCol ? 'twocol' : '';
+  document.getElementById('fmContent').className = cls;
+  document.getElementById('tabContent').className = cls;
+  document.getElementById('fmContent').style.display  = curTab==='fm'   ? '' : 'none';
+  document.getElementById('tabContent').style.display = curTab==='info' ? '' : 'none';
+  document.getElementById('b2').className = twoCol ? 'on' : '';
+  document.getElementById('b1').className = twoCol ? '' : 'on';
+  document.getElementById('tab_fm').className   = 'tb' + (curTab==='fm'?' on':'');
+  document.getElementById('tab_info').className = 'tb' + (curTab==='info'?' on':'');
+  document.getElementById('demoNote').innerHTML = curTab==='fm'
+    ? '↓ <b>FM tab.</b> Wide tables span the full width (never squeezed); small form cards pair up two-column on a laptop.'
+    : '↓ <b>Info tab.</b> All form cards — they flow into two columns when there is room.';
 }
+function setCol(two){ twoCol = two; apply(); }
+function showTab(t){ curTab = t; apply(); }
+apply();
 </script>
 </body>
 </html>
