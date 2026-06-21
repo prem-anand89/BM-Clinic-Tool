@@ -152,6 +152,16 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .pt-sel-wrap select{width:100%}
 .pt-bar-right{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
 @media(max-width:520px){.pt-bar{gap:5px}.pt-bar-right .abtn span:not(#dirtyBadge){display:none}}
+/* Two-column flow on laptops only (>=1024px). Form-heavy tabs add .colflow to
+   their form; wide content (tables, charts) gets .fullspan to span both
+   columns so it is never squeezed. iPad/phone stay single-column. */
+.colflow{column-gap:14px}
+.colflow .card{break-inside:avoid;-webkit-column-break-inside:avoid}
+.fullspan{break-inside:avoid;-webkit-column-break-inside:avoid}
+@media(min-width:1024px){
+  .colflow{column-count:2}
+  .colflow .fullspan{column-span:all}
+}
 </style>
 </head>
 <body>
@@ -564,6 +574,10 @@ function renderTab(name) {
   else if (name==='treatment') c.innerHTML = rTreatment(v);
   else if (name==='files')     c.innerHTML = rFiles(v);
   else if (name==='billing')   c.innerHTML = rBilling(v);
+  /* Two-column flow on laptops for form-heavy tabs (wide tables inside use
+     .fullspan to keep full width). Single column on tablet/phone via CSS. */
+  var twoColTabs = { info:1, msk:1, treatment:1, vm:1, cst:1, nrs:1, fm:1 };
+  if (twoColTabs[name]) { var formEl = c.querySelector('#ptForm'); if (formEl) formEl.classList.add('colflow'); }
   if (name==='body') initCanvas(v);
   if (name==='nrs')  { initNRS(v); setTimeout(drawNRSChart, 50); }
   if (name==='dash') setTimeout(drawNRSChart, 50);
@@ -870,7 +884,7 @@ function rNRS(v) {
   +'<div class="g2"><div class="fld"><label>Aggravating factors</label>'+ft('nrs.aggravating',n.aggravating,'',56)+'</div>'
   +'<div class="fld"><label>Relieving factors</label>'+ft('nrs.relieving',n.relieving,'',56)+'</div></div>'
   +'</div></div>'
-  +'<div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">📈</div>'
+  +'<div class="card fullspan"><div class="ch"><div class="ci" style="background:#E0F2FE">📈</div>'
   +'<div><div class="ct">Progress chart</div><div class="cs">NRS current pain across all visits</div></div></div><div class="cb">'
   +'<canvas id="nrsChart" width="560" height="160" style="width:100%;height:auto;max-height:160px"></canvas>'
   +'</div></div>'
@@ -1000,7 +1014,7 @@ function rFM(v) {
   return '<form id="ptForm" onsubmit="return false">'
 
   /* 1. Segment assessment — FM only */
-  +'<div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">'+fmLogoSVG(20,false)+'</div>'
+  +'<div class="card fullspan"><div class="ch"><div class="ci" style="background:#E0F2FE">'+fmLogoSVG(20,false)+'</div>'
   +'<div><div class="ct">Segment assessment — Stecco FM</div></div>'
   +'<button type="button" onclick="addSeg()" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;margin-left:auto">＋ Add</button>'
   +'</div><div class="cb"><div style="overflow-x:auto">'
@@ -1029,7 +1043,7 @@ function rFM(v) {
   +'</div></div>'
 
   /* 3+4. Palpation verification — CC's & CF's (unified table per image) */
-  +'<div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">📐</div>'
+  +'<div class="card fullspan"><div class="ch"><div class="ci" style="background:#EEEDFE">📐</div>'
   +'<div><div class="ct">Palpation verification — CC\'s &amp; CF\'s</div>'
   +'</div>'
   +'<button type="button" onclick="addPVC()" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;margin-left:auto">＋ Row</button>'
