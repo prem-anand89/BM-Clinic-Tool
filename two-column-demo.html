@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Two-Column Layout — DEMO (not applied)</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bd:#2f5d8a;--bl:#eef3f8;--bm:#c7d8e8;--tl:#2f7d6b;--tlL:#eaf4f1;
+  --bg:#f6f7f8;--card:#ffffff;--brd:#e6e9ec;--text:#18222b;--muted:#5b6770;--sub:#93a0a8;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);padding:14px 18px 60px}
+.wrap{max-width:740px;margin:0 auto}
+@media(min-width:1024px){.wrap{max-width:1150px}}
+
+.demo-bar{max-width:1150px;margin:0 auto 14px;background:#1c3a52;color:#fff;border-radius:14px;padding:14px 18px}
+.demo-bar h1{font-size:16px;font-weight:800}
+.demo-bar p{font-size:12px;opacity:.85;margin-top:4px;line-height:1.5}
+.toggle{display:inline-flex;gap:6px;margin-top:10px;background:rgba(255,255,255,.12);border-radius:10px;padding:4px}
+.toggle button{border:none;background:transparent;color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:8px;cursor:pointer}
+.toggle button.on{background:#fff;color:#1c3a52}
+
+.clinic-hdr{background:var(--bd);border-radius:16px;padding:15px 18px;margin-bottom:12px;color:#fff}
+.ch-name{font-size:18px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.ch-tagline{font-size:10px;font-style:italic;opacity:.8;margin-top:3px}
+
+.tab-bar{display:flex;gap:4px;overflow-x:auto;margin-bottom:12px}
+.tb{padding:7px 12px;border-radius:20px;border:1.5px solid var(--brd);font-size:11px;font-weight:600;background:var(--card);color:var(--muted);white-space:nowrap}
+.tb.on{background:var(--bd);color:#fff;border-color:var(--bd)}
+
+/* ── THE KEY BIT: two-column flow on laptop only ── */
+#tabContent.twocol{column-count:1;column-gap:14px}
+@media(min-width:1024px){ #tabContent.twocol{column-count:2} }
+#tabContent.twocol .card{break-inside:avoid}
+
+.card{background:var(--card);border:1.5px solid var(--brd);border-radius:14px;margin-bottom:12px;overflow:hidden;-webkit-column-break-inside:avoid}
+.ch{padding:11px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px}
+.ci{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.ct{font-size:12px;font-weight:700}
+.cb{padding:13px 14px}
+.fld{margin-bottom:10px}.fld:last-child{margin-bottom:0}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+label{display:block;font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+input,textarea{width:100%;padding:9px 11px;border:1.5px solid var(--brd);border-radius:9px;font-size:13px;background:var(--card);color:var(--text);font-family:inherit}
+textarea{resize:vertical;min-height:64px;line-height:1.5}
+.note{font-size:11px;color:var(--muted);background:var(--bl);border-left:3px solid var(--bm);padding:8px 11px;border-radius:8px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<div class="demo-bar">
+  <h1>Two-column desktop layout — DEMO</h1>
+  <p>This is a preview only — it is NOT applied to your real tool yet. Resize this window wide (≥1024px) to see the two columns; narrow it (or open on iPad/phone) and it collapses back to a single column automatically.</p>
+  <div class="toggle">
+    <button id="b2" class="on" onclick="setCol(true)">Two columns (laptop)</button>
+    <button id="b1" onclick="setCol(false)">Single column (current)</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="clinic-hdr">
+    <div class="ch-name">Beyond Mechanics</div>
+    <div class="ch-tagline">Breaking the cycle of Pain, Discomfort &amp; Dysfunction</div>
+  </div>
+
+  <div class="tab-bar">
+    <span class="tb">📈 Overview</span>
+    <span class="tb on">👤 Info</span>
+    <span class="tb">🩻 Body chart</span>
+    <span class="tb">📊 Pain NRS</span>
+    <span class="tb">🩺 Assessment</span>
+  </div>
+
+  <div class="note">↓ The Info tab below — same cards you have now, just flowing into two columns when there is room.</div>
+
+  <div id="tabContent" class="twocol">
+    <div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">👤</div><div class="ct">Patient details</div></div><div class="cb">
+      <div class="g3"><div class="fld"><label>Full name</label><input value="Jane Doe"></div><div class="fld"><label>Age</label><input value="42"></div><div class="fld"><label>Gender</label><input value="Female"></div></div>
+      <div class="g3"><div class="fld"><label>Location</label><input value="Hyderabad"></div><div class="fld"><label>Occupation</label><input value="Teacher"></div><div class="fld"><label>Phone</label><input value="90000 00000"></div></div>
+      <div class="g3"><div class="fld"><label>Visit date</label><input value="2026-06-21"></div><div class="fld"><label>Email</label><input value="jane@email.com"></div><div class="fld"><label>Referred by</label><input value="GP"></div></div>
+    </div></div>
+
+    <div class="card"><div class="ch"><div class="ci" style="background:#FAEEDA">📋</div><div class="ct">Chief complaint</div></div><div class="cb">
+      <div class="fld"><textarea>Right-sided low back pain radiating to buttock, worse with sitting.</textarea></div>
+    </div></div>
+
+    <div class="card"><div class="ch"><div class="ci" style="background:#E1F5EE">📅</div><div class="ct">Present history</div></div><div class="cb">
+      <div class="g3"><div class="fld"><label>Onset</label><input value="Gradual"></div><div class="fld"><label>Duration</label><input value="3 weeks"></div><div class="fld"><label>Progression</label><input value="Worsening"></div></div>
+      <div class="fld"><label>History of present illness</label><textarea>Started after a long drive. Worse in the mornings and with prolonged sitting; eases with walking.</textarea></div>
+    </div></div>
+
+    <div class="card"><div class="ch"><div class="ci" style="background:#FCEBEB">🩺</div><div class="ct">Past history</div></div><div class="cb">
+      <div class="fld"><label>Comorbidities</label><textarea>Hypothyroidism (on thyroxine).</textarea></div>
+      <div class="g2"><div class="fld"><label>Surgeries</label><textarea>Appendectomy 2009.</textarea></div><div class="fld"><label>Trauma</label><textarea>None significant.</textarea></div></div>
+    </div></div>
+
+    <div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">🏥</div><div class="ct">Clinic settings</div></div><div class="cb">
+      <div class="g2"><div class="fld"><label>Clinic name</label><input value="Beyond Mechanics"></div><div class="fld"><label>Therapist</label><input value="Dr. Prem Anand, PT"></div></div>
+    </div></div>
+  </div>
+</div>
+
+<script>
+function setCol(two){
+  document.getElementById('tabContent').className = two ? 'twocol' : '';
+  document.getElementById('b2').className = two ? 'on' : '';
+  document.getElementById('b1').className = two ? '' : 'on';
+}
+</script>
+</body>
+</html>
