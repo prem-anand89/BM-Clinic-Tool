@@ -312,10 +312,32 @@ function selectPt(id) {
 function addVisit() {
   if (!CUR) return;
   doCollect();
-  CUR.visits.push(mkVisit());
+  var prev = CUR.visits.length ? CUR.visits[CUR.visits.length-1] : null;
+  var nv = mkVisit();
+  if (prev) carryForward(prev, nv);
+  CUR.visits.push(nv);
   CV = CUR.visits.length - 1;
   sv();
   renderMain();
+}
+
+/* Carry persistent (patient-level) details into a new follow-up visit so they
+   aren't re-typed. Visit-specific data (complaint, NRS scores, exam, treatment,
+   billing, body-chart marks) is intentionally left blank. */
+function carryForward(prev, nv) {
+  var histKeys = ['similarHistory','existingConditions','surgeryHistory','traumaHistory','currentMedications'];
+  for (var i = 0; i < histKeys.length; i++) nv[histKeys[i]] = prev[histKeys[i]] || '';
+  /* PSFS: keep the same activities, reset scores for the new visit */
+  if (prev.nrs && prev.nrs.psfs && prev.nrs.psfs.length) {
+    nv.nrs.psfs = prev.nrs.psfs.map(function(p){ return { activity:(p&&p.activity)||'', score:'' }; });
+  }
+  /* FM persistent history tables */
+  if (prev.fm) {
+    var fmHist = ['histPaPrev','histTrauma','histSurgery'];
+    for (var j = 0; j < fmHist.length; j++) {
+      if (prev.fm[fmHist[j]] && prev.fm[fmHist[j]].length) nv.fm[fmHist[j]] = JSON.parse(JSON.stringify(prev.fm[fmHist[j]]));
+    }
+  }
 }
 
 function switchVisit(i) {
@@ -1879,7 +1901,7 @@ function buildBillHTML() {
     +'<div style="font-size:9px;font-style:italic;color:#5a6868;margin-top:3px">Breaking the cycle of Pain, Discomfort &amp; Dysfunction</div>'
     +'<div class="ci">'+escHtml(cl.therapist||'')+(cl.address?'<br>&#128205; '+escHtml(cl.address):'')+(cl.phone?'<br>&#128222; '+escHtml(cl.phone):'')+(cl.email?'<br>&#9993; '+escHtml(cl.email):'')+'</div></div>'
     +'<div><div class="it">INVOICE</div><div class="im">'+(b.invoiceNo?'No: <b>'+escHtml(b.invoiceNo)+'</b><br>':'')+'Date: '+escHtml(v.date||'')+'<br>Visit: '+(CV===0?'Initial':'Follow-up '+CV)+'<br><br><span class="stat">'+((b.status||'unpaid').toUpperCase())+'</span></div></div></div>'
-    +'<div class="ptb"><div class="ptl">Billed to</div><b>'+escHtml(pi.name||'')+'</b><br>'+escHtml(pi.occupation||'')+'</div>'
+    +'<div class="ptb"><div class="ptl">Billed to</div><b>'+escHtml(pi.name||'')+'</b>'+(pi.occupation?'<br>'+escHtml(pi.occupation):'')+(pi.location?'<br>'+escHtml(pi.location):'')+(pi.phone?'<br>&#128222; '+escHtml(pi.phone):'')+'</div>'
     +'<table><thead class="ih"><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>'
     +'<tbody>'+(lineRows||'<tr><td colspan="4" style="padding:12px;text-align:center;color:#888">No items</td></tr>')+'</tbody></table>'
     +'<div class="tots">'
