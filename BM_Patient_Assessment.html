@@ -174,8 +174,13 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .vm-g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px}
 .att-em{padding:24px;text-align:center;border:1.5px dashed var(--brd);border-radius:10px;color:var(--muted);font-size:11px}
 /* ─── PATIENT TOP BAR ─── */
-.pt-bar{display:flex;align-items:center;gap:7px;background:var(--card);border:1.5px solid var(--brd);border-radius:12px;padding:8px 10px;margin-bottom:8px;flex-wrap:wrap}
-.pt-bar-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.pt-bar{display:flex;align-items:center;gap:7px;background:var(--card);border:1.5px solid var(--brd);border-radius:12px;padding:8px 10px;margin-bottom:16px;flex-wrap:wrap}
+.pt-bar-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0;position:relative}
+#ptSuggest{position:absolute;top:100%;left:0;right:0;margin-top:5px;background:var(--card);border:1.5px solid var(--brd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:300px;overflow-y:auto;z-index:50;display:none}
+#ptSuggest .sg{padding:9px 12px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--brd);display:flex;flex-direction:column;gap:1px}
+#ptSuggest .sg:last-child{border-bottom:none}
+#ptSuggest .sg:hover,#ptSuggest .sg.active{background:var(--bl)}
+#ptSuggest .sg small{font-size:10px;color:var(--muted)}
 .pt-sel-wrap{position:relative;flex:1;min-width:0;max-width:320px;display:flex;align-items:center}
 .pt-sel-wrap select{width:100%}
 .pt-bar-right{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
@@ -233,20 +238,22 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
       </select>
       <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);font-size:12px">▾</span>
     </div>
-    <input id="ptSearch" type="text" placeholder="🔍 Search..." oninput="filterPts(this.value)"
+    <input id="ptSearch" type="text" placeholder="🔍 Search..." autocomplete="off"
+      oninput="searchSuggest(this.value)" onfocus="searchSuggest(this.value)" onblur="setTimeout(hideSuggest,150)"
       style="font-size:11px;padding:8px 10px;border:1.5px solid var(--brd);border-radius:9px;background:var(--card);color:var(--text);font-family:inherit;flex:0 1 150px;min-width:90px">
+    <div id="ptSuggest"></div>
   </div>
   <div class="pt-bar-right">
     <button class="abtn grn" onclick="newPt()">＋ New</button>
     <button class="abtn" onclick="exportJSON()" title="Export backup">⬇</button>
     <button class="abtn" onclick="document.getElementById('importFile').click()" title="Import backup">⬆</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+    <div style="position:relative;display:flex;align-items:center">
       <button class="abtn sb-sync" id="syncBtn" onclick="syncServer()" title="Sync server" style="white-space:nowrap">
         ⟳ Sync
         <span id="dirtyBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:20px;font-size:9px;padding:1px 5px;font-weight:700;margin-left:2px">●</span>
       </button>
-      <span id="lastSyncedLabel" style="font-size:9px;color:var(--sub);white-space:nowrap;padding-right:2px"></span>
+      <span id="lastSyncedLabel" style="position:absolute;top:100%;right:0;margin-top:1px;font-size:9px;color:var(--sub);white-space:nowrap;pointer-events:none"></span>
     </div>
     <button class="abtn" onclick="cycleTheme()" title="Theme: Auto / Light / Dark" id="themeBtn">🌓</button>
     <button class="abtn" onclick="toggleServerPanel()" title="Server settings" id="srvToggle">⚙</button>
@@ -537,6 +544,47 @@ function renderSB() {
 
 function filterPts(q) { renderSB(); }
 
+/* Live search suggestions — type a name and pick the patient directly */
+function searchSuggest(q) {
+  var box = document.getElementById('ptSuggest');
+  if (!box) return;
+  q = (q || '').trim().toLowerCase();
+  if (!q) { hideSuggest(); return; }
+  var matches = DB.patients.filter(function(p){
+    var n = (p.info && p.info.name || '').toLowerCase();
+    var lastV = p.visits && p.visits.length ? p.visits[p.visits.length-1] : null;
+    var cc = (lastV && lastV.chiefComplaint || '').toLowerCase();
+    return n.indexOf(q) >= 0 || cc.indexOf(q) >= 0;
+  }).sort(function(a,b){ return (a.info.name||'').localeCompare(b.info.name||''); });
+  if (!matches.length) {
+    box.innerHTML = '<div class="sg" style="cursor:default;color:var(--muted)">No matching patients</div>';
+    box.style.display = 'block';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < matches.length && i < 15; i++) {
+    var p = matches[i];
+    var lastV = p.visits && p.visits.length ? p.visits[p.visits.length-1] : null;
+    var cc = lastV && lastV.chiefComplaint ? lastV.chiefComplaint.slice(0,40) : '';
+    html += '<div class="sg" onmousedown="pickSuggest(\''+p.id+'\')">'
+      + esc(p.info.name || 'Unnamed')
+      + (cc ? '<small>'+esc(cc)+'</small>' : '')
+      + '</div>';
+  }
+  box.innerHTML = html;
+  box.style.display = 'block';
+}
+function pickSuggest(id) {
+  hideSuggest();
+  var s = document.getElementById('ptSearch');
+  if (s) s.value = '';
+  selectPt(id);
+}
+function hideSuggest() {
+  var box = document.getElementById('ptSuggest');
+  if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+}
+
 function selectPtFromDropdown(id) {
   if (!id) return;
   selectPt(id);
@@ -565,7 +613,7 @@ function renderMain() {
     pills += '<span class="vp'+(i===CV?' on':'')+'" onclick="switchVisit('+i+')">'+(i===0?'Initial':'FU '+i)+' &middot; '+vi.date+(viNRS?'<span'+viCol+'>'+viNRS+'</span>':'')+'</span>';
   }
 
-  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
+  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM',stomachSVG(15,true)],['cst','CST',skullSVG(16)],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
   var tabHtml = '';
   for (var i = 0; i < TABS.length; i++) {
     tabHtml += '<span class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px">'+TABS[i][2]+'</span>'+TABS[i][1]+'</span>';
@@ -688,6 +736,39 @@ function fmLogoSVG(size, mono) {
     +'<path d="M32 31 L24 38 L32 45 L24 52" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<path d="M32 31 L40 38 L32 45 L40 52" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<path d="M32 50 L27 59 M32 50 L37 59" stroke="'+teal+'" stroke-width="2.2" stroke-linecap="round"/>'
+    +'</svg>';
+}
+
+/* Stomach icon for the VM (visceral) tab. mono=true → currentColor outline. */
+function stomachSVG(size, mono) {
+  var stroke = mono ? 'currentColor' : '#b5453f';
+  var fill   = mono ? 'none' : '#f7d9d4';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
+    +'<path d="M40 11 L40 6" stroke="'+stroke+'" stroke-width="3" stroke-linecap="round"/>'
+    +'<path d="M40 11 C29 11 21 18 21 30 C21 42 30 49 40 46 C50 43 52 34 46 29 C42 26 44 21 42 17 C41 14 42 12 40 11 Z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3" stroke-linejoin="round"/>'
+    +'<path d="M43 45 C48 48 50 52 46 56" fill="none" stroke="'+stroke+'" stroke-width="3" stroke-linecap="round"/>'
+    +'</svg>';
+}
+
+/* Skull icon for the CST tab — cranial bones highlighted in different colours. */
+var SKULL_UID = 0;
+function skullSVG(size) {
+  var id = 'sk' + (SKULL_UID++);
+  var dome = 'M16 31 C16 11 48 11 48 31 C48 39 45 44 41 47 L41 50 C41 53 38 55 34 55 L30 55 C26 55 23 53 23 50 L23 47 C19 44 16 39 16 31 Z';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
+    +'<defs><clipPath id="'+id+'"><path d="'+dome+'"/></clipPath></defs>'
+    +'<path d="'+dome+'" fill="#f3eee4" stroke="#3a3026" stroke-width="1.6"/>'
+    +'<g clip-path="url(#'+id+')">'
+      +'<rect x="8" y="9" width="48" height="13" fill="#BA7517" opacity=".8"/>'      /* parietal (right) */
+      +'<rect x="8" y="9" width="24" height="13" fill="#534AB7" opacity=".75"/>'     /* parietal (left) */
+      +'<rect x="8" y="22" width="48" height="9" fill="#2f7d6b" opacity=".8"/>'      /* frontal band */
+      +'<rect x="8" y="31" width="9" height="11" fill="#1D9E75" opacity=".8"/>'      /* temporal L */
+      +'<rect x="47" y="31" width="9" height="11" fill="#1D9E75" opacity=".8"/>'     /* temporal R */
+    +'</g>'
+    +'<path d="M32 10 L32 31 M16 27 C28 23 36 23 48 27" stroke="#7a6f5e" stroke-width="1" fill="none" opacity=".55"/>'
+    +'<circle cx="26" cy="36" r="4" fill="#2a2018"/><circle cx="38" cy="36" r="4" fill="#2a2018"/>'
+    +'<path d="M32 40 L29 45 L35 45 Z" fill="#2a2018"/>'
+    +'<path d="M28 51 L28 55 M32 51 L32 55 M36 51 L36 55" stroke="#3a3026" stroke-width="1" opacity=".7"/>'
     +'</svg>';
 }
 
@@ -1296,7 +1377,7 @@ function rVM(v) {
   +'</div></div>'
 
   /* 4. Organ selector */
-  +'<div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">🫁</div>'
+  +'<div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">'+stomachSVG(20,false)+'</div>'
   +'<div><div class="ct">Organ assessment</div><div class="cs">Select organ to assess</div></div></div><div class="cb">'
   +(chips?'<div style="margin-bottom:10px"><div style="font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px">Assessed</div>'+chips+'</div>':'')
   +'<div class="fld"><label>Select organ</label>'
@@ -1341,7 +1422,7 @@ function rCST(v) {
   return '<form id="ptForm" onsubmit="return false">'
 
   /* 1. Initial assessment */
-  +'<div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">🧠</div>'
+  +'<div class="card"><div class="ch"><div class="ci" style="background:#EEEDFE">'+skullSVG(20)+'</div>'
   +'<div><div class="ct">Craniosacral assessment — Upledger</div></div></div><div class="cb">'
   +'<div class="g2">'
   +'<div class="fld"><label>CR rate (cycles/min)</label>'+fi('cst.crRate',c.crRate,'Normal 6–12')+'</div>'
