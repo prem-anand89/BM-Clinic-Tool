@@ -17,20 +17,37 @@
   --r:#b5453f;--rl:#f7ecea;--rm:#e6c4c1;
   --pu:#2f5d8a;--puL:#eef3f8;--puM:#c7d8e8;
   --bg:#f6f7f8;--card:#ffffff;--brd:#e6e9ec;--text:#18222b;--muted:#5b6770;--sub:#93a0a8;
+  --cfBg:#e8e6f0;--cfFg:#3730A3;--ccBg:#e6f0ec;--ccFg:#065F46;
 }
-/* Dark surfaces — applied automatically in OS dark mode (auto), and forced
-   by the theme toggle via html[data-theme]. Accent/brand colours are kept. */
+/* Dark surfaces — applied automatically in OS dark mode (auto), and forced by
+   the theme toggle via html[data-theme]. Pastel backgrounds darken and accent
+   text lightens to keep contrast; the navy brand colour (--bd) is kept. */
 @media(prefers-color-scheme:dark){:root{
   --bg:#0f1418;--card:#171f26;--brd:#2a343d;--text:#e6edf2;--muted:#9aa7b1;--sub:#6b7882;
-  --bl:#1a2530;--bm:#33485c
+  --bl:#16242f;--bm:#33485c;
+  --b:#9cc2e6;--pu:#9cc2e6;--puL:#16242f;--puM:#2a3f52;
+  --tl:#7fd2bb;--tlL:#13241f;--tlM:#274a40;
+  --a:#e0b768;--al:#2a2212;--am:#5a4a22;
+  --r:#f0908a;--rl:#2a1717;--rm:#5a2f2f;
+  --cfBg:#241f33;--cfFg:#b3aef0;--ccBg:#14241f;--ccFg:#7fd2bb
 }}
 html[data-theme="light"]{
   --bg:#f6f7f8;--card:#ffffff;--brd:#e6e9ec;--text:#18222b;--muted:#5b6770;--sub:#93a0a8;
-  --bl:#eef3f8;--bm:#c7d8e8
+  --bl:#eef3f8;--bm:#c7d8e8;
+  --b:#2f5d8a;--pu:#2f5d8a;--puL:#eef3f8;--puM:#c7d8e8;
+  --tl:#2f7d6b;--tlL:#eaf4f1;--tlM:#c2ddd5;
+  --a:#b07a1f;--al:#faf1e2;--am:#e6cfa3;
+  --r:#b5453f;--rl:#f7ecea;--rm:#e6c4c1;
+  --cfBg:#e8e6f0;--cfFg:#3730A3;--ccBg:#e6f0ec;--ccFg:#065F46
 }
 html[data-theme="dark"]{
   --bg:#0f1418;--card:#171f26;--brd:#2a343d;--text:#e6edf2;--muted:#9aa7b1;--sub:#6b7882;
-  --bl:#1a2530;--bm:#33485c
+  --bl:#16242f;--bm:#33485c;
+  --b:#9cc2e6;--pu:#9cc2e6;--puL:#16242f;--puM:#2a3f52;
+  --tl:#7fd2bb;--tlL:#13241f;--tlM:#274a40;
+  --a:#e0b768;--al:#2a2212;--am:#5a4a22;
+  --r:#f0908a;--rl:#2a1717;--rm:#5a2f2f;
+  --cfBg:#241f33;--cfFg:#b3aef0;--ccBg:#14241f;--ccFg:#7fd2bb
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .wrap{max-width:740px;margin:0 auto;padding:10px 10px 50px}
@@ -113,9 +130,9 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 /* LEFT header  — teal */
 .pv-t .pv-l  {background:var(--tlL);color:var(--tl);font-size:10px;font-weight:800;letter-spacing:.06em}
 /* CF sub-header — light grey with dark text */
-.pv-t .pv-cf {background:#e8e6f0;color:#3730A3;font-size:8px;font-weight:700}
+.pv-t .pv-cf {background:var(--cfBg);color:var(--cfFg);font-size:8px;font-weight:700}
 /* CC sub-header — light warm grey with dark text */
-.pv-t .pv-cc {background:#e6f0ec;color:#065F46;font-size:8px;font-weight:700}
+.pv-t .pv-cc {background:var(--ccBg);color:var(--ccFg);font-size:8px;font-weight:700}
 /* Thick divider between Right and Left groups */
 .pv-t .pv-div   {border-left:3px solid var(--brd)!important}
 .pv-t td.pv-div {border-left:3px solid var(--brd)!important}
@@ -124,8 +141,8 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .pv-t .pv-l-start,.pv-t td.l-start{border-left:3px solid var(--brd)!important}
 .pv-t .pv-gh{background:var(--puL);color:var(--pu);font-size:8px;font-weight:700}
 .pv-t .pv-go{background:var(--tlL);color:var(--tl);font-size:8px;font-weight:700}
-.pv-t .pv-rcf,.pv-t .pv-lcf{background:#e8e6f0;color:#3730A3;font-size:8px;font-weight:700}
-.pv-t .pv-rcc,.pv-t .pv-lcc{background:#e6f0ec;color:#065F46;font-size:8px;font-weight:700}
+.pv-t .pv-rcf,.pv-t .pv-lcf{background:var(--cfBg);color:var(--cfFg);font-size:8px;font-weight:700}
+.pv-t .pv-rcc,.pv-t .pv-lcc{background:var(--ccBg);color:var(--ccFg);font-size:8px;font-weight:700}
 .pv-t td.rcf,.pv-t td.rcc,.pv-t td.lcf,.pv-t td.lcc,.pv-t td.cf,.pv-t td.cc{background:var(--card)}
 .pv-t .pv-label{font-size:10px;font-weight:600;padding:5px 7px;text-align:left;white-space:nowrap;background:var(--bg)}
 .hist-t{width:100%;border-collapse:collapse;font-size:11px}
