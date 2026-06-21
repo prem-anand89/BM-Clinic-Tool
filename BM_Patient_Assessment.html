@@ -54,7 +54,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Laptop / desktop only (>=1024px): widen the column so tables and forms
    breathe. iPad portrait (768px) and phones stay below this breakpoint and
    are completely unaffected. */
-@media(min-width:1024px){.wrap{max-width:1150px;padding:14px 18px 60px}}
+@media(min-width:1024px){.wrap{max-width:1280px;padding:20px 28px 70px}}
+@media(min-width:1500px){.wrap{max-width:1400px}}
 .clinic-hdr{background:var(--bd);border-radius:16px;padding:15px 18px 13px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden}
 .clinic-hdr::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
 .ch-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
@@ -195,20 +196,31 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
   .colflow{column-count:2}
   .colflow .fullspan{column-span:all}
 }
-/* Larger, more legible type on laptops (the base sizes are tuned for phones).
-   Untouched on tablet/phone. */
+/* Larger, more legible type + roomier spacing on laptops/desktops.
+   The base sizes are tuned for phones; tablet/phone stay untouched. */
 @media(min-width:1024px){
-  input,select,textarea{font-size:14px;padding:10px 12px}
-  label{font-size:10px}
-  .ct{font-size:13px}.cs{font-size:11px}
-  .cb{padding:15px 16px}
-  .fld{margin-bottom:12px}
-  textarea{line-height:1.65}
-  .tb{font-size:12px;padding:8px 14px}
-  .vp{font-size:11px}
-  .inote{font-size:12px}
-  .fm-t,.pv-t,.hist-t,.vm-t{font-size:12px}
-  .fm-t td input,.fm-t td select,.hist-t td input,.vm-t td input,.vm-t td select{font-size:12px}
+  input,select,textarea{font-size:15px;padding:11px 13px}
+  label{font-size:10.5px;margin-bottom:5px}
+  .ct{font-size:14.5px}.cs{font-size:11.5px}
+  .ch{padding:13px 18px}
+  .cb{padding:18px 20px}
+  .card{margin-bottom:14px;border-radius:16px}
+  .colflow{column-gap:20px}
+  .fld{margin-bottom:14px}
+  .g2{gap:14px;margin-bottom:14px}
+  .g3{gap:12px;margin-bottom:14px}
+  textarea{line-height:1.7}
+  .ci{width:30px;height:30px;font-size:15px}
+  .tab-bar{gap:6px;margin-bottom:14px}
+  .tb{font-size:13px;padding:9px 16px;min-height:40px}
+  .vp{font-size:11.5px;padding:5px 13px;min-height:30px}
+  .inote{font-size:12.5px;padding:11px 14px}
+  .pt-nm{font-size:18px}
+  .abtn{font-size:12px;padding:8px 13px;min-height:38px}
+  .fm-t,.pv-t,.hist-t,.vm-t{font-size:12.5px}
+  .fm-t td input,.fm-t td select,.hist-t td input,.vm-t td input,.vm-t td select{font-size:12.5px}
+  .fm-t th,.hist-t th,.vm-t th{font-size:10px}
+  .btr{font-size:13px}
 }
 </style>
 </head>
@@ -613,7 +625,7 @@ function renderMain() {
     pills += '<span class="vp'+(i===CV?' on':'')+'" onclick="switchVisit('+i+')">'+(i===0?'Initial':'FU '+i)+' &middot; '+vi.date+(viNRS?'<span'+viCol+'>'+viNRS+'</span>':'')+'</span>';
   }
 
-  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM',stomachSVG(16)],['cst','CST',skullSVG(16)],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
+  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(16,false)],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
   var tabHtml = '';
   for (var i = 0; i < TABS.length; i++) {
     tabHtml += '<span class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px">'+TABS[i][2]+'</span>'+TABS[i][1]+'</span>';
@@ -725,8 +737,8 @@ function openVisit(i){ CT='info'; switchVisit(i); }
 /* Circle · winged figure · dashed spine · fascial diagonal diamonds.
    mono=true uses currentColor so it adapts to active/inactive tab colours. */
 function fmLogoSVG(size, mono) {
-  var navy = mono ? 'currentColor' : '#1c3a52';
-  var teal = mono ? 'currentColor' : '#2f7d6b';
+  var navy = mono ? 'currentColor' : '#3f7cc0';
+  var teal = mono ? 'currentColor' : '#1f9e84';
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
     +'<circle cx="32" cy="32" r="29" stroke="'+navy+'" stroke-width="2.5"/>'
     +'<circle cx="32" cy="15" r="4.2" stroke="'+teal+'" stroke-width="2.2"/>'
@@ -736,52 +748,6 @@ function fmLogoSVG(size, mono) {
     +'<path d="M32 31 L24 38 L32 45 L24 52" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<path d="M32 31 L40 38 L32 45 L40 52" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
     +'<path d="M32 50 L27 59 M32 50 L37 59" stroke="'+teal+'" stroke-width="2.2" stroke-linecap="round"/>'
-    +'</svg>';
-}
-
-/* Stomach icon for the VM (visceral) tab — anatomical J-shaped stomach. */
-function stomachSVG(size) {
-  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
-    /* esophagus (top tube) */
-    +'<path d="M33 12 C31 6 33 2 37 2" stroke="#8C2D22" stroke-width="6.5" stroke-linecap="round"/>'
-    +'<path d="M33 12 C31 6 33 2 37 2" stroke="#C0392B" stroke-width="4" stroke-linecap="round"/>'
-    /* duodenum (lower-right tube) */
-    +'<path d="M43 44 C49 46 52 52 46 56" stroke="#8C2D22" stroke-width="6.5" stroke-linecap="round"/>'
-    +'<path d="M43 44 C49 46 52 52 46 56" stroke="#C0392B" stroke-width="4" stroke-linecap="round"/>'
-    /* stomach body (fundus → body → antrum/pylorus) */
-    +'<path d="M37 10 C31 10 28 13 28 18 C28 21 25 22 22 24 C15 29 16 39 23 45 C28 49 36 50 42 46 C47 43 47 37 44 34 C41 31 41 27 42 22 C43 17 43 13 40 11 C39 10 38 10 37 10 Z" fill="#C0392B" stroke="#8C2D22" stroke-width="2" stroke-linejoin="round"/>'
-    /* lesser-curvature highlight + rugae */
-    +'<path d="M40 18 C40 24 39 30 41 34" stroke="#E07B6E" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>'
-    +'<path d="M24 29 C22 34 23 40 27 44" stroke="#8C2D22" stroke-width="1.3" opacity=".45"/>'
-    +'</svg>';
-}
-
-/* Skull icon for the CST tab — lateral view, each cranial bone a distinct
-   colour (frontal/parietal/temporal/occipital/sphenoid), facial bones neutral. */
-var SKULL_UID = 0;
-function skullSVG(size) {
-  var id = 'sk' + (SKULL_UID++);
-  var sil = 'M12 46 L12 41 L14 37 L14 32 C14 21 22 12 31 12 C43 12 53 18 54 28 C55 35 51 40 47 41 L42 41 L41 45 L37 49 L27 51 L18 50 Z';
-  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
-    +'<defs><clipPath id="'+id+'"><path d="'+sil+'"/></clipPath></defs>'
-    /* base (facial bones / jaw) */
-    +'<path d="'+sil+'" fill="#ece3cf"/>'
-    +'<g clip-path="url(#'+id+')">'
-      +'<path d="M9 35 L13 20 C17 13 24 12 31 12 L31 35 Z" fill="#E8B53F"/>'        /* frontal — yellow */
-      +'<path d="M31 12 L45 12 L46 31 L31 31 Z" fill="#E2789B"/>'                    /* parietal — pink */
-      +'<path d="M45 12 L57 21 L55 38 L46 41 L46 31 Z" fill="#4FB07E"/>'             /* occipital — green */
-      +'<path d="M31 31 L46 31 L45 41 L34 42 L31 35 Z" fill="#4F9FD4"/>'            /* temporal — blue */
-      +'<path d="M27 31 L31 31 L31 38 L27 37 Z" fill="#E0863C"/>'                    /* sphenoid — orange */
-    +'</g>'
-    /* sutures */
-    +'<path d="M31 12 L31 35 M45 12 L46 40 M31 31 L46 31" stroke="#5a5040" stroke-width=".9" fill="none" opacity=".55"/>'
-    /* outline */
-    +'<path d="'+sil+'" fill="none" stroke="#3a3026" stroke-width="1.6" stroke-linejoin="round"/>'
-    /* eye orbit, nasal aperture, ear canal, teeth */
-    +'<ellipse cx="22" cy="33" rx="3" ry="3.4" fill="#2a2018"/>'
-    +'<path d="M15 35 L15 41 L19 39 Z" fill="#2a2018"/>'
-    +'<circle cx="36" cy="35" r="1.7" fill="#2a2018"/>'
-    +'<path d="M16 45 L16 49 M19 46 L19 50 M22 46 L22 50 M25 46 L25 49" stroke="#3a3026" stroke-width="1" opacity=".7"/>'
     +'</svg>';
 }
 
