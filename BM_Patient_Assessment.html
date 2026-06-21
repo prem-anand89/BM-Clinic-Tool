@@ -304,7 +304,7 @@ function selectPt(id) {
   CUR = found;
   if (!CUR.visits.length) { CUR.visits.push(mkVisit()); sv(); }
   CV = CUR.visits.length - 1;
-  CT = 'info';
+  CT = 'dash';
   renderSB();
   renderMain();
 }
@@ -445,7 +445,7 @@ function doCollect() {
   for (var i = 0; i < clEls.length; i++) { DB.clinic[clEls[i].dataset.cl] = clEls[i].value; }
   if (clEls.length && typeof renderClinicHeader === 'function') renderClinicHeader();
 
-  var infoKeys = ['name','age','gender','occupation','location','referredBy','phone'];
+  var infoKeys = ['name','age','gender','occupation','location','referredBy','phone','email'];
   for (var i = 0; i < infoKeys.length; i++) {
     var el = f.querySelector('[data-info="'+infoKeys[i]+'"]');
     if (el) pi[infoKeys[i]] = el.value;
@@ -512,7 +512,7 @@ function renderMain() {
     pills += '<span class="vp'+(i===CV?' on':'')+'" onclick="switchVisit('+i+')">'+(i===0?'Initial':'FU '+i)+' &middot; '+vi.date+(viNRS?'<span'+viCol+'>'+viNRS+'</span>':'')+'</span>';
   }
 
-  var TABS = [['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM','🔵'],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
+  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
   var tabHtml = '';
   for (var i = 0; i < TABS.length; i++) {
     tabHtml += '<span class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px">'+TABS[i][2]+'</span>'+TABS[i][1]+'</span>';
@@ -553,7 +553,8 @@ function renderTab(name) {
   if (!c || !CUR) return;
   var v = CUR.visits[CV];
   var pi = CUR.info;
-  if      (name==='info')      c.innerHTML = rInfo(v,pi);
+  if      (name==='dash')      c.innerHTML = rDashboard(v);
+  else if (name==='info')      c.innerHTML = rInfo(v,pi);
   else if (name==='body')      c.innerHTML = rBody(v);
   else if (name==='nrs')       c.innerHTML = rNRS(v);
   else if (name==='fm')        c.innerHTML = rFM(v);
@@ -565,6 +566,72 @@ function renderTab(name) {
   else if (name==='billing')   c.innerHTML = rBilling(v);
   if (name==='body') initCanvas(v);
   if (name==='nrs')  { initNRS(v); setTimeout(drawNRSChart, 50); }
+  if (name==='dash') setTimeout(drawNRSChart, 50);
+}
+
+/* ─── DASHBOARD / OVERVIEW ─── */
+function rDashboard(v) {
+  var visits = CUR.visits || [];
+  var last = visits.length ? visits[visits.length-1] : null;
+  var latestNRS = last && last.nrs ? last.nrs.current : null;
+  var pavg = last ? psfsAverage(last.nrs||{}) : null;
+  var dxs=''; for (var di=visits.length-1; di>=0; di--){ if(visits[di].msk && visits[di].msk.diagnosis){ dxs=visits[di].msk.diagnosis; break; } }
+  function nrsCol(val){ return val==null?'var(--muted)':val<=3?'#1D9E75':val<=6?'#BA7517':'#E24B4A'; }
+  function tile(label,val,col){ return '<div style="flex:1;min-width:110px;background:var(--bg);border:1px solid var(--brd);border-radius:12px;padding:11px 13px">'
+    +'<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">'+label+'</div>'
+    +'<div style="font-size:18px;font-weight:800;color:'+(col||'var(--text)')+'">'+val+'</div></div>'; }
+  var rows='';
+  for (var i=visits.length-1; i>=0; i--){
+    var vi=visits[i], n=vi.nrs||{}, pa=psfsAverage(n);
+    rows+='<tr onclick="openVisit('+i+')" style="cursor:pointer">'
+      +'<td style="padding:7px 8px;border-bottom:1px solid var(--brd);font-weight:700">'+(i===0?'Initial':'FU '+i)+'</td>'
+      +'<td style="padding:7px 8px;border-bottom:1px solid var(--brd)">'+esc(vi.date||'')+'</td>'
+      +'<td style="padding:7px 8px;border-bottom:1px solid var(--brd);text-align:center;font-weight:700;color:'+nrsCol(n.current)+'">'+(n.current!=null?n.current:'—')+'</td>'
+      +'<td style="padding:7px 8px;border-bottom:1px solid var(--brd);text-align:center">'+(pa!=null?pa.toFixed(1):'—')+'</td>'
+      +'<td style="padding:7px 8px;border-bottom:1px solid var(--brd);color:var(--muted);font-size:11px">'+esc((vi.chiefComplaint||'').slice(0,44))+'</td>'
+      +'</tr>';
+  }
+  return '<div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">📈</div><div><div class="ct">Overview</div>'
+    +'<div class="cs">'+visits.length+' visit'+(visits.length===1?'':'s')+(visits.length&&last?' · '+esc(visits[0].date)+' → '+esc(last.date):'')+'</div></div>'
+    +'<button class="abtn" style="margin-left:auto" onclick="doPrint(\'full\')">📄 Full record</button>'
+    +'</div><div class="cb">'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    +tile('Latest pain (NRS)', latestNRS!=null?latestNRS+'/10':'—', nrsCol(latestNRS))
+    +tile('Latest PSFS avg', pavg!=null?pavg.toFixed(1)+'/10':'—')
+    +tile('Total visits', visits.length)
+    +'</div>'
+    +(dxs?'<div class="inote" style="margin-bottom:12px"><b>Working diagnosis:</b> '+esc(dxs)+'</div>':'')
+    +'<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Pain trend (NRS current)</div>'
+    +'<canvas id="nrsChart" width="560" height="160" style="width:100%;height:auto;max-height:160px;margin-bottom:14px"></canvas>'
+    +'<div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Visit history</div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+    +'<thead><tr>'
+    +'<th style="padding:6px 8px;text-align:left;background:var(--bg);border-bottom:1px solid var(--brd);font-size:9px;color:var(--muted);text-transform:uppercase">Visit</th>'
+    +'<th style="padding:6px 8px;text-align:left;background:var(--bg);border-bottom:1px solid var(--brd);font-size:9px;color:var(--muted);text-transform:uppercase">Date</th>'
+    +'<th style="padding:6px 8px;text-align:center;background:var(--bg);border-bottom:1px solid var(--brd);font-size:9px;color:var(--muted);text-transform:uppercase">NRS</th>'
+    +'<th style="padding:6px 8px;text-align:center;background:var(--bg);border-bottom:1px solid var(--brd);font-size:9px;color:var(--muted);text-transform:uppercase">PSFS</th>'
+    +'<th style="padding:6px 8px;text-align:left;background:var(--bg);border-bottom:1px solid var(--brd);font-size:9px;color:var(--muted);text-transform:uppercase">Complaint</th>'
+    +'</tr></thead><tbody>'+(rows||'<tr><td colspan="5" style="padding:10px;text-align:center;color:var(--muted)">No visits</td></tr>')+'</tbody></table></div>'
+    +'</div></div>';
+}
+function openVisit(i){ CT='info'; switchVisit(i); }
+
+/* ─── FM / Beyond Mechanics logo (inline SVG) ─── */
+/* Circle · winged figure · dashed spine · fascial diagonal diamonds.
+   mono=true uses currentColor so it adapts to active/inactive tab colours. */
+function fmLogoSVG(size, mono) {
+  var navy = mono ? 'currentColor' : '#1c3a52';
+  var teal = mono ? 'currentColor' : '#2f7d6b';
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
+    +'<circle cx="32" cy="32" r="29" stroke="'+navy+'" stroke-width="2.5"/>'
+    +'<circle cx="32" cy="15" r="4.2" stroke="'+teal+'" stroke-width="2.2"/>'
+    +'<path d="M31 21 L13 24 L31 30 Z" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round"/>'
+    +'<path d="M33 21 L51 24 L33 30 Z" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round"/>'
+    +'<line x1="32" y1="20" x2="32" y2="50" stroke="'+navy+'" stroke-width="2" stroke-dasharray="2 3.5" stroke-linecap="round"/>'
+    +'<path d="M32 31 L24 38 L32 45 L24 52" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<path d="M32 31 L40 38 L32 45 L40 52" stroke="'+teal+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>'
+    +'<path d="M32 50 L27 59 M32 50 L37 59" stroke="'+teal+'" stroke-width="2.2" stroke-linecap="round"/>'
+    +'</svg>';
 }
 
 /* ─── FIELD HELPERS ─── */
@@ -591,7 +658,8 @@ function rInfo(v,pi) {
   +'<div class="g3"><div class="fld"><label>Location / City</label><input data-info="location" value="'+esc(pi.location||'')+'" oninput="doCollect()" type="text" placeholder="e.g. Hyderabad"></div>'
   +'<div class="fld"><label>Occupation / Sport</label><input data-info="occupation" value="'+esc(pi.occupation||'')+'" oninput="doCollect()" type="text"></div>'
   +'<div class="fld"><label>Phone</label><input data-info="phone" value="'+esc(pi.phone||'')+'" oninput="doCollect()" type="tel" placeholder="Phone number"></div></div>'
-  +'<div class="g2"><div class="fld"><label>Visit date</label>'+fd('date',v.date)+'</div>'
+  +'<div class="g3"><div class="fld"><label>Visit date</label>'+fd('date',v.date)+'</div>'
+  +'<div class="fld"><label>Email</label><input data-info="email" value="'+esc(pi.email||'')+'" oninput="doCollect()" type="email" placeholder="name@email.com"></div>'
   +'<div class="fld"><label>Referred by</label><input data-info="referredBy" value="'+esc(pi.referredBy||'')+'" oninput="doCollect()" type="text" placeholder="GP, specialist, self..."></div></div>'
   +'</div></div>'
   +'<div class="card"><div class="ch"><div class="ci" style="background:#FAEEDA">📋</div><div><div class="ct">Chief complaint</div></div></div><div class="cb">'
@@ -932,7 +1000,7 @@ function rFM(v) {
   return '<form id="ptForm" onsubmit="return false">'
 
   /* 1. Segment assessment — FM only */
-  +'<div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">🔵</div>'
+  +'<div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">'+fmLogoSVG(20,false)+'</div>'
   +'<div><div class="ct">Segment assessment — Stecco FM</div></div>'
   +'<button type="button" onclick="addSeg()" style="padding:5px 10px;border-radius:8px;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;margin-left:auto">＋ Add</button>'
   +'</div><div class="cb"><div style="overflow-x:auto">'
@@ -1539,7 +1607,7 @@ function confirmNotePrint(){
 /* ─── PRINT via Blob URL (fixes window.open / document.write errors) ─── */
 function doPrint(type) {
   if (!CUR) return;
-  var html = (type === 'note') ? buildNoteHTML() : buildBillHTML();
+  var html = (type === 'note') ? buildNoteHTML() : (type === 'full') ? buildFullRecordHTML() : buildBillHTML();
   var blob = new Blob([html], {type:'text/html'});
   var url = URL.createObjectURL(blob);
   var win = window.open(url, '_blank');
@@ -1912,6 +1980,66 @@ function buildBillHTML() {
     +'</div>'
     +(b.notes?'<div style="margin-top:18px;font-size:11px;color:#555;padding:9px 12px;background:#f9f9f9;border-radius:5px">'+escHtml(b.notes)+'</div>':'')
     +'<div class="foot">Thank you for your visit &nbsp;&middot;&nbsp; '+escHtml(cl.name||'')+(cl.phone?' &nbsp;&middot;&nbsp; '+escHtml(cl.phone):'')+'</div>'
+    +'</div></body></html>';
+}
+
+/* ─── FULL PATIENT RECORD — all visits in one printable document ─── */
+function buildFullRecordHTML() {
+  var pi=CUR.info||{}, cl=DB.clinic, visits=CUR.visits||[];
+  var tp = THERAPISTS[cl.therapist||''] || {};
+  var tName = tp.displayName || cl.therapist || '';
+  function nbk(title,content){ return content?'<div class="sl">'+title+'</div><div class="sv">'+escHtml(content)+'</div>':''; }
+
+  var body='';
+  for (var i=0;i<visits.length;i++){
+    var v=visits[i], n=v.nrs||{}, m=v.msk||{}, t=v.treatment||{}, ph=v.presentHistory||{};
+    var nrsParts=[]; ['current','worst','best','avg'].forEach(function(k){ if(n[k]!=null) nrsParts.push(k.charAt(0).toUpperCase()+k.slice(1)+': '+n[k]+'/10'); });
+    var pavg=psfsAverage(n);
+    var presentParts=[]; if(ph.onset)presentParts.push('Onset: '+escHtml(ph.onset)); if(ph.duration)presentParts.push('Duration: '+escHtml(ph.duration)); if(ph.progression)presentParts.push('Progression: '+escHtml(ph.progression));
+    body+='<div class="visit">'
+      +'<div class="vh"><span class="vt">'+(i===0?'Initial assessment':'Follow-up '+i)+'</span><span class="vd">'+escHtml(v.date||'')+'</span></div>'
+      +nbk('Chief complaint',v.chiefComplaint)
+      +(presentParts.length?'<div class="sl">Present history</div><div class="sv">'+presentParts.join(' &middot; ')+(ph.details?'<br>'+escHtml(ph.details):'')+'</div>':'')
+      +(nrsParts.length||pavg!=null?'<div class="sl">Pain / function</div><div class="sv">'+nrsParts.join(' &nbsp; ')+(pavg!=null?' &nbsp; PSFS avg: '+pavg.toFixed(1)+'/10':'')+'</div>':'')
+      +nbk('Observation',m.observation)
+      +nbk('ROM',m.rom)
+      +nbk('Palpation',m.palpation)
+      +nbk('Special tests',m.specialTests)
+      +nbk('Diagnosis',m.diagnosis)
+      +nbk('Treatment',t.treatment)
+      +nbk('Exercise program',t.exerciseProgram)
+      +nbk('Advice',t.advice)
+      +nbk('Response / follow-up',t.followUp)
+      +'</div>';
+  }
+
+  var styles=[
+    '*{box-sizing:border-box;margin:0;padding:0}',
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#1a2020;background:#fff}',
+    '.page{max-width:780px;margin:0 auto;padding:24px 28px}',
+    '.hdr{border-bottom:2px solid #1a6880;padding-bottom:10px;margin-bottom:14px}',
+    '.cn{font-size:17px;font-weight:900;color:#1a3a5c;letter-spacing:.5px;text-transform:uppercase}',
+    '.tl{font-size:8px;font-style:italic;color:#5a6868;margin-top:3px}',
+    '.rt{font-size:14px;font-weight:800;color:#0C4A6E;margin-top:10px}',
+    '.pt{font-size:11px;color:#444;margin-top:4px;line-height:1.6}',
+    '.visit{border:1px solid #d2dcdc;border-radius:6px;padding:12px 14px;margin-bottom:12px;page-break-inside:avoid}',
+    '.vh{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #e2e8e8;padding-bottom:5px;margin-bottom:7px}',
+    '.vt{font-size:13px;font-weight:800;color:#0C4A6E}','.vd{font-size:10px;color:#888}',
+    '.sl{font-size:8.5px;font-weight:700;color:#075985;text-transform:uppercase;letter-spacing:.05em;margin:8px 0 2px}',
+    '.sv{font-size:11px;line-height:1.6;white-space:pre-wrap;color:#1a2020}',
+    '.foot{margin-top:18px;border-top:1px solid #dde2e2;padding-top:10px;font-size:9px;color:#999;text-align:center}',
+    '@media print{.page{padding:14px 18px}}'
+  ].join('');
+
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Patient Record — '+escHtml(pi.name||'')+'</title><style>'+styles+'</style></head>'
+    +'<body onload="window.print()"><div class="page">'
+    +'<div class="hdr"><div class="cn">'+escHtml(cl.name||'Beyond Mechanics')+'</div>'
+    +'<div class="tl">Breaking the cycle of Pain, Discomfort &amp; Dysfunction</div>'
+    +'<div class="rt">Patient record — full history</div>'
+    +'<div class="pt"><b>'+escHtml(pi.name||'')+'</b>'+(pi.age?' &middot; '+escHtml(pi.age)+(pi.gender?'/'+escHtml(pi.gender):''):'')+(pi.location?' &middot; '+escHtml(pi.location):'')+(pi.phone?' &middot; &#128222; '+escHtml(pi.phone):'')
+    +'<br>'+visits.length+' visit'+(visits.length===1?'':'s')+(visits.length?' &middot; '+escHtml(visits[0].date)+' → '+escHtml(visits[visits.length-1].date):'')+(tName?' &middot; '+escHtml(tName):'')+'</div></div>'
+    +body
+    +'<div class="foot">Generated '+new Date().toLocaleDateString()+' &middot; '+escHtml(cl.name||'')+(cl.phone?' &middot; '+escHtml(cl.phone):'')+'</div>'
     +'</div></body></html>';
 }
 
