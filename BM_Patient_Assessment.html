@@ -613,7 +613,7 @@ function renderMain() {
     pills += '<span class="vp'+(i===CV?' on':'')+'" onclick="switchVisit('+i+')">'+(i===0?'Initial':'FU '+i)+' &middot; '+vi.date+(viNRS?'<span'+viCol+'>'+viNRS+'</span>':'')+'</span>';
   }
 
-  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM',stomachSVG(15,true)],['cst','CST',skullSVG(16)],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
+  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM',stomachSVG(16)],['cst','CST',skullSVG(16)],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
   var tabHtml = '';
   for (var i = 0; i < TABS.length; i++) {
     tabHtml += '<span class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px">'+TABS[i][2]+'</span>'+TABS[i][1]+'</span>';
@@ -739,36 +739,49 @@ function fmLogoSVG(size, mono) {
     +'</svg>';
 }
 
-/* Stomach icon for the VM (visceral) tab. mono=true → currentColor outline. */
-function stomachSVG(size, mono) {
-  var stroke = mono ? 'currentColor' : '#b5453f';
-  var fill   = mono ? 'none' : '#f7d9d4';
+/* Stomach icon for the VM (visceral) tab — anatomical J-shaped stomach. */
+function stomachSVG(size) {
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
-    +'<path d="M40 11 L40 6" stroke="'+stroke+'" stroke-width="3" stroke-linecap="round"/>'
-    +'<path d="M40 11 C29 11 21 18 21 30 C21 42 30 49 40 46 C50 43 52 34 46 29 C42 26 44 21 42 17 C41 14 42 12 40 11 Z" fill="'+fill+'" stroke="'+stroke+'" stroke-width="3" stroke-linejoin="round"/>'
-    +'<path d="M43 45 C48 48 50 52 46 56" fill="none" stroke="'+stroke+'" stroke-width="3" stroke-linecap="round"/>'
+    /* esophagus (top tube) */
+    +'<path d="M33 12 C31 6 33 2 37 2" stroke="#8C2D22" stroke-width="6.5" stroke-linecap="round"/>'
+    +'<path d="M33 12 C31 6 33 2 37 2" stroke="#C0392B" stroke-width="4" stroke-linecap="round"/>'
+    /* duodenum (lower-right tube) */
+    +'<path d="M43 44 C49 46 52 52 46 56" stroke="#8C2D22" stroke-width="6.5" stroke-linecap="round"/>'
+    +'<path d="M43 44 C49 46 52 52 46 56" stroke="#C0392B" stroke-width="4" stroke-linecap="round"/>'
+    /* stomach body (fundus → body → antrum/pylorus) */
+    +'<path d="M37 10 C31 10 28 13 28 18 C28 21 25 22 22 24 C15 29 16 39 23 45 C28 49 36 50 42 46 C47 43 47 37 44 34 C41 31 41 27 42 22 C43 17 43 13 40 11 C39 10 38 10 37 10 Z" fill="#C0392B" stroke="#8C2D22" stroke-width="2" stroke-linejoin="round"/>'
+    /* lesser-curvature highlight + rugae */
+    +'<path d="M40 18 C40 24 39 30 41 34" stroke="#E07B6E" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>'
+    +'<path d="M24 29 C22 34 23 40 27 44" stroke="#8C2D22" stroke-width="1.3" opacity=".45"/>'
     +'</svg>';
 }
 
-/* Skull icon for the CST tab — cranial bones highlighted in different colours. */
+/* Skull icon for the CST tab — lateral view, each cranial bone a distinct
+   colour (frontal/parietal/temporal/occipital/sphenoid), facial bones neutral. */
 var SKULL_UID = 0;
 function skullSVG(size) {
   var id = 'sk' + (SKULL_UID++);
-  var dome = 'M16 31 C16 11 48 11 48 31 C48 39 45 44 41 47 L41 50 C41 53 38 55 34 55 L30 55 C26 55 23 53 23 50 L23 47 C19 44 16 39 16 31 Z';
+  var sil = 'M12 46 L12 41 L14 37 L14 32 C14 21 22 12 31 12 C43 12 53 18 54 28 C55 35 51 40 47 41 L42 41 L41 45 L37 49 L27 51 L18 50 Z';
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
-    +'<defs><clipPath id="'+id+'"><path d="'+dome+'"/></clipPath></defs>'
-    +'<path d="'+dome+'" fill="#f3eee4" stroke="#3a3026" stroke-width="1.6"/>'
+    +'<defs><clipPath id="'+id+'"><path d="'+sil+'"/></clipPath></defs>'
+    /* base (facial bones / jaw) */
+    +'<path d="'+sil+'" fill="#ece3cf"/>'
     +'<g clip-path="url(#'+id+')">'
-      +'<rect x="8" y="9" width="48" height="13" fill="#BA7517" opacity=".8"/>'      /* parietal (right) */
-      +'<rect x="8" y="9" width="24" height="13" fill="#534AB7" opacity=".75"/>'     /* parietal (left) */
-      +'<rect x="8" y="22" width="48" height="9" fill="#2f7d6b" opacity=".8"/>'      /* frontal band */
-      +'<rect x="8" y="31" width="9" height="11" fill="#1D9E75" opacity=".8"/>'      /* temporal L */
-      +'<rect x="47" y="31" width="9" height="11" fill="#1D9E75" opacity=".8"/>'     /* temporal R */
+      +'<path d="M9 35 L13 20 C17 13 24 12 31 12 L31 35 Z" fill="#E8B53F"/>'        /* frontal — yellow */
+      +'<path d="M31 12 L45 12 L46 31 L31 31 Z" fill="#E2789B"/>'                    /* parietal — pink */
+      +'<path d="M45 12 L57 21 L55 38 L46 41 L46 31 Z" fill="#4FB07E"/>'             /* occipital — green */
+      +'<path d="M31 31 L46 31 L45 41 L34 42 L31 35 Z" fill="#4F9FD4"/>'            /* temporal — blue */
+      +'<path d="M27 31 L31 31 L31 38 L27 37 Z" fill="#E0863C"/>'                    /* sphenoid — orange */
     +'</g>'
-    +'<path d="M32 10 L32 31 M16 27 C28 23 36 23 48 27" stroke="#7a6f5e" stroke-width="1" fill="none" opacity=".55"/>'
-    +'<circle cx="26" cy="36" r="4" fill="#2a2018"/><circle cx="38" cy="36" r="4" fill="#2a2018"/>'
-    +'<path d="M32 40 L29 45 L35 45 Z" fill="#2a2018"/>'
-    +'<path d="M28 51 L28 55 M32 51 L32 55 M36 51 L36 55" stroke="#3a3026" stroke-width="1" opacity=".7"/>'
+    /* sutures */
+    +'<path d="M31 12 L31 35 M45 12 L46 40 M31 31 L46 31" stroke="#5a5040" stroke-width=".9" fill="none" opacity=".55"/>'
+    /* outline */
+    +'<path d="'+sil+'" fill="none" stroke="#3a3026" stroke-width="1.6" stroke-linejoin="round"/>'
+    /* eye orbit, nasal aperture, ear canal, teeth */
+    +'<ellipse cx="22" cy="33" rx="3" ry="3.4" fill="#2a2018"/>'
+    +'<path d="M15 35 L15 41 L19 39 Z" fill="#2a2018"/>'
+    +'<circle cx="36" cy="35" r="1.7" fill="#2a2018"/>'
+    +'<path d="M16 45 L16 49 M19 46 L19 50 M22 46 L22 50 M25 46 L25 49" stroke="#3a3026" stroke-width="1" opacity=".7"/>'
     +'</svg>';
 }
 
