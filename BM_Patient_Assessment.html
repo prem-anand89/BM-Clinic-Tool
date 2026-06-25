@@ -2155,11 +2155,15 @@ function sv() {
   try {
     /* Mark each patient with the time it was last changed */
     var now = new Date().toISOString();
+    /* Bump the patient being edited so it reliably wins the newest-wins merge */
+    if (CUR) CUR._local_updated = now;
     for (var i = 0; i < DB.patients.length; i++) {
       if (!DB.patients[i]._local_updated) DB.patients[i]._local_updated = now;
     }
     localStorage.setItem('bm_v6', JSON.stringify(DB));
     localStorage.setItem('bm_dirty', '1');   /* flag: unsynced changes exist */
+    /* Auto-push to server shortly after the edit settles (debounced) */
+    scheduleAutoSync();
     return true;
   } catch(e) {
     /* Most common cause: localStorage quota exceeded (large photo/scan
@@ -2263,12 +2267,21 @@ function updateSyncBadge() {
 }
 
 /* ── SYNC (push local → server, pull merged result back) ── */
-function syncServer() {
-  if (!SERVER_URL) { showToast('Enter your home server URL first', true); return; }
+/* ── Auto-sync state ── */
+var _autoSyncTimer = null;
+var _serverOk = false;
+function scheduleAutoSync() {
+  if (!SERVER_URL || !_serverOk) return;
+  if (_autoSyncTimer) clearTimeout(_autoSyncTimer);
+  _autoSyncTimer = setTimeout(function() { _autoSyncTimer = null; syncServer(true); }, 3000);
+}
+
+function syncServer(silent) {
+  if (!SERVER_URL) { if (!silent) showToast('Enter your home server URL first', true); return; }
   doCollect();
   var btn = document.getElementById('syncBtn');
-  if (btn) btn.classList.add('syncing');
-  setStatus('Syncing…');
+  if (btn && !silent) btn.classList.add('syncing');
+  if (!silent) setStatus('Syncing…');
 
   /* Tag all local patients with local timestamp before sending */
   var now = new Date().toISOString();
@@ -2287,6 +2300,7 @@ function syncServer() {
     return r.json();
   })
   .then(function(data) {
+    _serverOk = true;
     if (data.patients) {
       /* Merge server response with local — newest wins per patient */
       var merged = mergePatients(DB.patients, data.patients);
@@ -2303,29 +2317,44 @@ function syncServer() {
         localStorage.setItem('bm_v6', JSON.stringify(DB));
         localStorage.removeItem('bm_dirty');
       } catch(e) {}
-      var prev = CUR ? CUR.id : null;
-      CUR = null; CV = 0;
-      renderSB();
-      /* Re-select previously open patient if there was one */
-      if (prev) {
-        for (var i = 0; i < DB.patients.length; i++) {
-          if (DB.patients[i].id === prev) { selectPt(prev); break; }
+      if (silent) {
+        /* Background sync: refresh the list but keep the open patient and
+           their in-progress edits intact — re-point CUR to the merged object */
+        var keepId = CUR ? CUR.id : null;
+        renderSB();
+        if (keepId) {
+          for (var i = 0; i < DB.patients.length; i++) {
+            if (DB.patients[i].id === keepId) { CUR = DB.patients[i]; break; }
+          }
         }
-      }
-      if (!CUR) {
-        document.getElementById('mainArea').innerHTML =
-          '<div class="empty-s"><div class="es-icon">✅</div>'
-          +'<div class="es-txt">Sync complete</div>'
-          +'<div class="es-sub">'+merged.length+' patients · all data up to date</div></div>';
+      } else {
+        var prev = CUR ? CUR.id : null;
+        CUR = null; CV = 0;
+        renderSB();
+        /* Re-select previously open patient if there was one */
+        if (prev) {
+          for (var i = 0; i < DB.patients.length; i++) {
+            if (DB.patients[i].id === prev) { selectPt(prev); break; }
+          }
+        }
+        if (!CUR) {
+          document.getElementById('mainArea').innerHTML =
+            '<div class="empty-s"><div class="es-icon">✅</div>'
+            +'<div class="es-txt">Sync complete</div>'
+            +'<div class="es-sub">'+merged.length+' patients · all data up to date</div></div>';
+        }
       }
     }
     setStatus('Synced ' + new Date().toLocaleTimeString(), true);
-    var _cnt = (data.patients ? data.patients.length : DB.patients.length);
-    showToast('Sync complete ✓ · ' + _cnt + ' patients');
+    if (!silent) {
+      var _cnt = (data.patients ? data.patients.length : DB.patients.length);
+      showToast('Sync complete ✓ · ' + _cnt + ' patients');
+    }
   })
   .catch(function(err) {
+    _serverOk = false;
     setStatus('Server unreachable', false);
-    showToast('Cannot reach server — working offline', true);
+    if (!silent) showToast('Cannot reach server — working offline', true);
   })
   .finally(function() {
     if (btn) btn.classList.remove('syncing');
@@ -2338,16 +2367,18 @@ function pingServer() {
   fetch(apiUrl('/ping'), { method: 'GET' })
     .then(function(r) {
       if (r.ok) {
+        _serverOk = true;
         setStatus('Server reachable ✓', true);
-        /* Auto-sync if there are pending changes and server just became available */
+        /* Auto-push pending changes silently now that the server is reachable */
         var dirty = '';
         try { dirty = localStorage.getItem('bm_dirty') || ''; } catch(e) {}
-        if (dirty) showToast('Server reachable — tap Sync to push clinic data');
+        if (dirty) syncServer(true);
       } else {
+        _serverOk = false;
         setStatus('Server unreachable', false);
       }
     })
-    .catch(function() { setStatus('Offline — clinic mode', false); });
+    .catch(function() { _serverOk = false; setStatus('Offline — clinic mode', false); });
 }
 
 /* ─── EXPORT / IMPORT JSON ─── */
@@ -2689,8 +2720,14 @@ initTherapistUI();
 maybeBackupReminder();
 /* Ping server on load — silently checks if we're at home on Wi-Fi */
 if (SERVER_URL) setTimeout(pingServer, 600);
+/* Pull latest data from the server shortly after load (and push anything dirty) */
+if (SERVER_URL) setTimeout(function() { syncServer(true); }, 1500);
 /* Re-ping every 60 seconds in case connectivity changes */
 setInterval(function() { if (SERVER_URL) pingServer(); }, 60000);
+/* When the tab regains focus (e.g. switching back to the app), silently sync */
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && SERVER_URL) syncServer(true);
+});
 </script>
 </body>
 </html>
