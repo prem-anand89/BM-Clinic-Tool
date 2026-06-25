@@ -84,6 +84,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .abtn.pri{background:var(--bd);color:#fff;border-color:var(--bd)}
 .abtn.grn{background:var(--tlL);color:var(--tl);border-color:var(--tlM)}
 .abtn.red{background:var(--rl);color:var(--r);border-color:var(--rm)}
+/* Sync button stacks "⟳ Sync" over a compact last-synced time, both kept
+   inside the button so the timestamp can never displace the layout. */
+.sb-sync{flex-direction:column;gap:0;justify-content:center;line-height:1.1}
+.sb-sync .sb-main{display:inline-flex;align-items:center;gap:3px;white-space:nowrap}
+.sb-sync #lastSyncedLabel{font-size:8px;font-weight:600;color:var(--sub);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.sb-sync #lastSyncedLabel:empty{display:none}
 .vpills{display:flex;gap:5px;overflow-x:auto;padding-bottom:3px;-webkit-overflow-scrolling:touch}
 .vp{padding:4px 11px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);white-space:nowrap;min-height:28px;display:flex;align-items:center}
 .vp.on{background:var(--puL);border-color:var(--puM);color:var(--pu)}
@@ -248,13 +254,10 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
     <button class="abtn" onclick="exportJSON()" title="Export backup">⬇</button>
     <button class="abtn" onclick="document.getElementById('importFile').click()" title="Import backup">⬆</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
-      <button class="abtn sb-sync" id="syncBtn" onclick="syncServer()" title="Sync server" style="white-space:nowrap">
-        ⟳ Sync
-        <span id="dirtyBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:20px;font-size:9px;padding:1px 5px;font-weight:700;margin-left:2px">●</span>
-      </button>
-      <span id="lastSyncedLabel" style="font-size:9px;color:var(--sub);white-space:nowrap;padding-right:2px"></span>
-    </div>
+    <button class="abtn sb-sync" id="syncBtn" onclick="syncServer()" title="Sync server">
+      <div class="sb-main">⟳ Sync<span id="dirtyBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:20px;font-size:9px;padding:1px 5px;font-weight:700;margin-left:2px">●</span></div>
+      <span id="lastSyncedLabel"></span>
+    </button>
     <button class="abtn" onclick="cycleTheme()" title="Theme: Auto / Light / Dark" id="themeBtn">🌓</button>
     <button class="abtn" onclick="toggleServerPanel()" title="Server settings" id="srvToggle">⚙</button>
   </div>
@@ -2234,7 +2237,12 @@ function initServerUI() {
   try {
     var ls = localStorage.getItem('bm_last_sync');
     var lbl = document.getElementById('lastSyncedLabel');
-    if (ls && lbl) lbl.textContent = 'Last synced: ' + ls;
+    if (ls && lbl) {
+      var parts = ls.split(' ');
+      lbl.textContent = '✓ ' + parts[parts.length - 1];
+      var sbtn = document.getElementById('syncBtn');
+      if (sbtn) sbtn.title = 'Last synced: ' + ls;
+    }
   } catch(e) {}
 }
 
@@ -2252,7 +2260,9 @@ function setStatus(msg, ok) {
     var d = now.toLocaleDateString([], {day:'2-digit',month:'short',year:'numeric'});
     var t = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     var lbl = document.getElementById('lastSyncedLabel');
-    if (lbl) lbl.textContent = 'Last synced: ' + d + ' ' + t;
+    if (lbl) lbl.textContent = '✓ ' + t;
+    var sbtn = document.getElementById('syncBtn');
+    if (sbtn) sbtn.title = 'Last synced: ' + d + ' ' + t;
     try { localStorage.setItem('bm_last_sync', d + ' ' + t); } catch(e) {}
   }
 }
@@ -2270,14 +2280,18 @@ function updateSyncBadge() {
 /* ── Auto-sync state ── */
 var _autoSyncTimer = null;
 var _serverOk = false;
+var _syncing = false;
 function scheduleAutoSync() {
-  if (!SERVER_URL || !_serverOk) return;
+  /* Skip while a sync is in flight — syncServer() calls doCollect()→sv(),
+     which would otherwise reschedule itself into a perpetual loop. */
+  if (!SERVER_URL || !_serverOk || _syncing) return;
   if (_autoSyncTimer) clearTimeout(_autoSyncTimer);
   _autoSyncTimer = setTimeout(function() { _autoSyncTimer = null; syncServer(true); }, 3000);
 }
 
 function syncServer(silent) {
   if (!SERVER_URL) { if (!silent) showToast('Enter your home server URL first', true); return; }
+  _syncing = true;
   doCollect();
   var btn = document.getElementById('syncBtn');
   if (btn && !silent) btn.classList.add('syncing');
@@ -2357,6 +2371,7 @@ function syncServer(silent) {
     if (!silent) showToast('Cannot reach server — working offline', true);
   })
   .finally(function() {
+    _syncing = false;
     if (btn) btn.classList.remove('syncing');
   });
 }
