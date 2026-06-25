@@ -62,9 +62,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ch-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em}
 .ch-tag{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px}
 .ch-tagline{font-size:10px;font-style:italic;color:rgba(255,255,255,.8);margin-top:3px;letter-spacing:.01em}
-.ch-contact{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:7px}
-.ch-contact span{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:rgba(255,255,255,.62);line-height:1.4}
 .ch-badge{margin-left:auto;padding:3px 10px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.16);border-radius:20px;font-size:10px;font-weight:600;color:rgba(255,255,255,.75)}
+@media(max-width:480px){
+  .clinic-hdr{padding:10px 13px 9px}
+  .ch-top{margin-bottom:0}
+  .ch-name{font-size:15px!important}
+  .ch-tagline{font-size:9px}
+  #therapistQualLabel{display:none!important}
+  #therapistPhoneLabel{display:none!important}
+  #hdrTherapistBlock{max-width:120px}
+  #therapistLabel{font-size:11px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+}
 .ch-sub{font-size:10px;color:rgba(255,255,255,.6);line-height:1.6;margin-top:1px}
 .pt-card{background:var(--card);border:1.5px solid var(--brd);border-radius:14px;padding:12px 14px;margin-bottom:10px}
 .pt-top{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}
@@ -215,12 +223,11 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
     <div style="flex:1">
       <div class="ch-name" style="font-size:18px;letter-spacing:.5px;text-transform:uppercase">BEYOND MECHANICS</div>
       <div class="ch-tagline">Breaking the cycle of Pain, Discomfort &amp; Dysfunction</div>
-      <div class="ch-contact" id="hdrContact"></div>
     </div>
-    <div style="text-align:right;flex-shrink:0" id="hdrTherapistBlock">
-      <div id="therapistLabel" style="font-size:12px;font-weight:700;color:#fff;opacity:.9"></div>
-      <div id="therapistQualLabel" style="font-size:8.5px;color:rgba(255,255,255,.5);margin-top:3px;max-width:240px;text-align:right;line-height:1.7;word-break:break-word"></div>
-      <div id="therapistPhoneLabel" style="font-size:10px;color:rgba(255,255,255,.6);margin-top:3px"></div>
+    <div style="text-align:right;flex-shrink:0;min-width:0" id="hdrTherapistBlock">
+      <div id="therapistLabel" style="font-size:12px;font-weight:700;color:#fff;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+      <div id="therapistQualLabel" style="font-size:8.5px;color:rgba(255,255,255,.5);margin-top:3px;max-width:220px;text-align:right;line-height:1.6;word-break:break-word"></div>
+      <div id="therapistPhoneLabel" style="font-size:9.5px;color:rgba(255,255,255,.55);margin-top:2px"></div>
     </div>
   </div>
 </div>
@@ -496,7 +503,6 @@ function doCollect() {
 
   var clEls = f.querySelectorAll('[data-cl]');
   for (var i = 0; i < clEls.length; i++) { DB.clinic[clEls[i].dataset.cl] = clEls[i].value; }
-  if (clEls.length && typeof renderClinicHeader === 'function') renderClinicHeader();
 
   var infoKeys = ['name','age','gender','occupation','location','referredBy','phone','email'];
   for (var i = 0; i < infoKeys.length; i++) {
@@ -2638,7 +2644,6 @@ function setTherapist(name) {
     qLbl.innerHTML = ql.length ? ql.join('<br>') : (profile.qualifications||'').replace(/\|/g,'<br>');
   }
   if (pLbl) pLbl.textContent = profile.phone || '';
-  if (typeof renderClinicHeader === 'function') renderClinicHeader();
   /* Re-render info tab so dropdowns update immediately */
   if (typeof CT !== 'undefined' && CT === 'info' && CUR) renderTab('info');
 }
@@ -2647,17 +2652,6 @@ function initTherapistUI() {
   if (DB.clinic.therapist) setTherapist(DB.clinic.therapist);
 }
 
-/* Fill the clinic header contact row (location · phone · email) with icons */
-function renderClinicHeader() {
-  var el = document.getElementById('hdrContact');
-  if (!el) return;
-  var cl = DB.clinic || {};
-  var parts = [];
-  if (cl.address) parts.push('<span>📍 '+escHtml(cl.address)+'</span>');
-  if (cl.phone)   parts.push('<span>📞 '+escHtml(cl.phone)+'</span>');
-  if (cl.email)   parts.push('<span>✉️ '+escHtml(cl.email)+'</span>');
-  el.innerHTML = parts.join('');
-}
 
 /* ─── THEME (Auto / Light / Dark) ─── */
 function applyTheme() {
@@ -2692,7 +2686,6 @@ renderSB();
 initServerUI();
 updateSyncBadge();
 initTherapistUI();
-renderClinicHeader();
 maybeBackupReminder();
 /* Ping server on load — silently checks if we're at home on Wi-Fi */
 if (SERVER_URL) setTimeout(pingServer, 600);
