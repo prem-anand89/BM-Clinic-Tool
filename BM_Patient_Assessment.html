@@ -193,7 +193,11 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .pt-sel-wrap{position:relative;flex:1;min-width:0;max-width:320px;display:flex;align-items:center}
 .pt-sel-wrap select{width:100%}
 .pt-bar-right{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
-@media(max-width:520px){.pt-bar{gap:5px}.pt-bar-right .abtn span:not(#dirtyBadge){display:none}}
+@media(max-width:520px){.pt-bar{gap:5px}}
+/* Hide sub-text spans inside action buttons (including last-synced label) on
+   anything narrower than a desktop — keeps all buttons the same height and
+   prevents the Sync button from being taller than its neighbours. */
+@media(max-width:1023px){.pt-bar-right .abtn span:not(#dirtyBadge){display:none}}
 /* Two-column flow on laptops only (>=1024px). Form-heavy tabs add .colflow to
    their form; wide content (tables, charts) gets .fullspan to span both
    columns so it is never squeezed. iPad/phone stay single-column. */
@@ -739,8 +743,8 @@ function rInfo(v,pi) {
   +'<div class="card"><div class="ch"><div class="ci" style="background:#FCEBEB">🩺</div><div><div class="ct">Past history</div></div></div><div class="cb">'
   +'<div class="fld"><label>Past similar complaints</label>'+ft('similarHistory',v.similarHistory,'Previous episodes, treatment received and response...',72)+'</div>'
   +'<div class="fld"><label>Existing comorbidities</label>'+ft('existingConditions',v.existingConditions,'Diabetes, hypertension, osteoporosis, autoimmune, cardiac, thyroid...',72)+'</div>'
-  +'<div class="g2"><div class="fld"><label>Surgeries (past &amp; current)</label>'+ft('surgeryHistory',v.surgeryHistory||'','Procedure, date, outcome...',68)+'</div>'
-  +'<div class="fld"><label>Trauma history</label>'+ft('traumaHistory',v.traumaHistory||'','Fractures, accidents, falls, injuries...',68)+'</div></div>'
+  +'<div class="fld"><label>Surgeries (past &amp; current)</label>'+ft('surgeryHistory',v.surgeryHistory||'','Procedure, date, outcome...',72)+'</div>'
+  +'<div class="fld"><label>Trauma history</label>'+ft('traumaHistory',v.traumaHistory||'','Fractures, accidents, falls, injuries...',72)+'</div>'
   +'<div class="fld"><label>Current &amp; past medications</label>'+ft('currentMedications',v.currentMedications,'NSAIDs, steroids, anticoagulants, supplements, injections...',68)+'</div>'
   +'</div></div>'
 
@@ -2237,9 +2241,9 @@ function initServerUI() {
   try {
     var ls = localStorage.getItem('bm_last_sync');
     var lbl = document.getElementById('lastSyncedLabel');
+    var lt = localStorage.getItem('bm_last_sync_t');
     if (ls && lbl) {
-      var parts = ls.split(' ');
-      lbl.textContent = '✓ ' + parts[parts.length - 1];
+      lbl.textContent = '✓ ' + (lt || ls);
       var sbtn = document.getElementById('syncBtn');
       if (sbtn) sbtn.title = 'Last synced: ' + ls;
     }
@@ -2263,7 +2267,10 @@ function setStatus(msg, ok) {
     if (lbl) lbl.textContent = '✓ ' + t;
     var sbtn = document.getElementById('syncBtn');
     if (sbtn) sbtn.title = 'Last synced: ' + d + ' ' + t;
-    try { localStorage.setItem('bm_last_sync', d + ' ' + t); } catch(e) {}
+    try {
+      localStorage.setItem('bm_last_sync', d + ' ' + t);
+      localStorage.setItem('bm_last_sync_t', t);
+    } catch(e) {}
   }
 }
 
