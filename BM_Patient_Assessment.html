@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Beyond Mechanics">
@@ -94,7 +94,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .vp{padding:4px 11px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1.5px solid var(--brd);background:var(--card);color:var(--muted);white-space:nowrap;min-height:28px;display:flex;align-items:center}
 .vp.on{background:var(--puL);border-color:var(--puM);color:var(--pu)}
 .tab-bar{display:flex;gap:4px;overflow-x:auto;padding-bottom:3px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
-.tb{padding:7px 12px;border-radius:20px;border:1.5px solid var(--brd);font-size:11px;font-weight:600;cursor:pointer;background:var(--card);color:var(--muted);white-space:nowrap;min-height:36px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent}
+.tb{padding:7px 12px;border-radius:20px;border:1.5px solid var(--brd);font-size:11px;font-weight:600;cursor:pointer;background:var(--card);color:var(--muted);white-space:nowrap;min-height:36px;display:flex;align-items:center;-webkit-tap-highlight-color:transparent;font-family:inherit}
+.tb:focus-visible{outline:2px solid var(--bm);outline-offset:1px}
 .tb.on{background:var(--bd);color:#fff;border-color:var(--bd)}
 .card{background:var(--card);border:1.5px solid var(--brd);border-radius:14px;margin-bottom:10px;overflow:hidden}
 .ch{padding:11px 14px;border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:8px}
@@ -194,6 +195,26 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .pt-sel-wrap select{width:100%}
 .pt-bar-right{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
 @media(max-width:520px){.pt-bar{gap:5px}}
+/* ─── PATIENT CARD LIST ─── */
+.pl-wrap{max-width:780px;margin:0 auto}
+.pl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pl-count{font-size:13px;font-weight:700;color:var(--text)}
+.pl-filters{display:flex;gap:8px;flex-wrap:wrap}
+.pl-f{display:flex;flex-direction:column;gap:2px;font-size:8.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.pl-f select{font-size:11px;font-weight:600;padding:6px 8px;border:1.5px solid var(--brd);border-radius:8px;background:var(--card);color:var(--text);font-family:inherit;cursor:pointer}
+.pl-list{display:flex;flex-direction:column;gap:8px}
+.pt-card-btn{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:11px 13px;border:1.5px solid var(--brd);border-radius:12px;background:var(--card);color:var(--text);font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .12s,background .12s}
+.pt-card-btn:hover{border-color:var(--bm);background:var(--bl)}
+.pt-card-btn:focus-visible{outline:2px solid var(--bm);outline-offset:1px}
+.pt-card-av{width:38px;height:38px;flex-shrink:0;border-radius:10px;background:var(--puL);color:var(--pu);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800}
+.pt-card-body{display:flex;flex-direction:column;gap:1px;flex:1;min-width:0}
+.pt-card-nm{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-card-meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-card-sub{font-size:10.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt-card-badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end;flex-shrink:0}
+.pl-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.pl-rf{background:#FCEBEB;color:#C0392B}
+.pl-up{background:#FFF3E0;color:#B26A00}
 /* Hide sub-text spans inside action buttons (including last-synced label) on
    anything narrower than a desktop — keeps all buttons the same height and
    prevents the Sync button from being taller than its neighbours. */
@@ -244,14 +265,9 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 <!-- Patient top bar — replaces sidebar -->
 <div class="pt-bar" id="ptBar">
   <div class="pt-bar-left">
-    <div class="pt-sel-wrap">
-      <select id="ptDropdown" onchange="selectPtFromDropdown(this.value)" style="flex:1;padding:8px 32px 8px 11px;border:1.5px solid var(--brd);border-radius:9px;font-size:12px;font-weight:600;background:var(--card);color:var(--text);font-family:inherit;appearance:none;-webkit-appearance:none;cursor:pointer;min-width:0">
-        <option value="">— Select patient —</option>
-      </select>
-      <span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);font-size:12px">▾</span>
-    </div>
-    <input id="ptSearch" type="text" placeholder="🔍 Search..." oninput="filterPts(this.value)"
-      style="font-size:11px;padding:8px 10px;border:1.5px solid var(--brd);border-radius:9px;background:var(--card);color:var(--text);font-family:inherit;flex:0 1 150px;min-width:90px">
+    <button class="abtn" id="ptListBtn" onclick="showPatientList()" title="Patient list" style="flex-shrink:0;font-weight:700">📋 Patients</button>
+    <input id="ptSearch" type="search" placeholder="🔍 Search name, phone, ID..." oninput="onSearchInput(this.value)" aria-label="Search patients"
+      style="font-size:12px;padding:8px 11px;border:1.5px solid var(--brd);border-radius:9px;background:var(--card);color:var(--text);font-family:inherit;flex:1 1 160px;min-width:90px">
   </div>
   <div class="pt-bar-right">
     <button class="abtn grn" onclick="newPt()">＋ New</button>
@@ -269,24 +285,35 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 
 <!-- Server settings panel — hidden by default, shown by ⚙ -->
 <div id="serverPanel" style="display:none;background:var(--card);border:1.5px solid var(--brd);border-radius:12px;padding:12px 14px;margin-bottom:8px">
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <div style="flex:1;min-width:200px">
-      <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Server URL</div>
-      <input id="serverUrl" type="text" placeholder="https://your-server.railway.app?token=..."
+  <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+    <div style="flex:2;min-width:200px">
+      <label for="serverUrl" style="display:block;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Server URL</label>
+      <input id="serverUrl" type="text" placeholder="https://your-server.railway.app"
         style="width:100%;font-size:11px;padding:7px 10px;border:1.5px solid var(--brd);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit"
         oninput="saveServerUrl(this.value)">
     </div>
-    <div style="flex-shrink:0;padding-top:18px">
+    <div style="flex:1;min-width:150px">
+      <label for="serverToken" style="display:block;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Access token</label>
+      <div style="position:relative">
+        <input id="serverToken" type="password" placeholder="••••••••" autocomplete="off"
+          style="width:100%;font-size:11px;padding:7px 30px 7px 10px;border:1.5px solid var(--brd);border-radius:8px;background:var(--bg);color:var(--text);font-family:inherit"
+          oninput="saveServerToken(this.value)">
+        <button type="button" id="tokToggle" onclick="toggleTokenVisibility()" aria-label="Show or hide token" title="Show / hide token"
+          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;font-size:13px;padding:2px;line-height:1">👁</button>
+      </div>
+    </div>
+    <div style="flex-shrink:0">
       <div id="serverStatus" style="font-size:10px;color:var(--muted)">Not connected</div>
     </div>
   </div>
+  <div id="backupInfo" style="font-size:10px;color:var(--muted);margin-top:9px;padding-top:9px;border-top:1px solid var(--brd)">Last backup: never</div>
 </div>
 
 <div id="mainArea">
   <div class="empty-s">
     <div class="es-icon">🩺</div>
     <div class="es-txt">No patient selected</div>
-    <div class="es-sub">Choose from the dropdown or tap ＋ New</div>
+    <div class="es-sub">Tap 📋 Patients to browse, or ＋ New to add one</div>
   </div>
 </div>
 </div>
@@ -352,14 +379,14 @@ function mkVisit() {
 
 /* ─── PATIENT CRUD ─── */
 function newPt() {
-  var p = { id:gid(), info:{ name:'', age:'', gender:'', occupation:'' }, visits:[] };
+  var p = { id:gid(), info:{ name:'', age:'', gender:'', occupation:'', therapist:(DB.clinic.therapist||''), condition:'' }, visits:[] };
   DB.patients.push(p);
   sv();
   CUR = p;
   CUR.visits.push(mkVisit());
   sv();
   CV = 0; CT = 'info';
-  renderSB();
+  PL_VISIBLE = false;
   renderMain();
 }
 
@@ -372,7 +399,7 @@ function selectPt(id) {
   if (!CUR.visits.length) { CUR.visits.push(mkVisit()); sv(); }
   CV = CUR.visits.length - 1;
   CT = 'dash';
-  renderSB();
+  PL_VISIBLE = false;
   renderMain();
 }
 
@@ -431,7 +458,7 @@ function deletePt() {
   if (IS_ONLINE && SERVER_URL) {
     fetch(apiUrl('/delete'), {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: authHeaders({'Content-Type':'application/json'}),
       body: JSON.stringify({id: deletedId})
     }).then(function(r){
       if (r.ok) {
@@ -511,7 +538,7 @@ function doCollect() {
   var clEls = f.querySelectorAll('[data-cl]');
   for (var i = 0; i < clEls.length; i++) { DB.clinic[clEls[i].dataset.cl] = clEls[i].value; }
 
-  var infoKeys = ['name','age','gender','occupation','location','referredBy','phone','email'];
+  var infoKeys = ['name','age','gender','occupation','location','referredBy','phone','email','therapist','condition'];
   for (var i = 0; i < infoKeys.length; i++) {
     var el = f.querySelector('[data-info="'+infoKeys[i]+'"]');
     if (el) pi[infoKeys[i]] = el.value;
@@ -525,34 +552,106 @@ function doCollect() {
   return sv();
 }
 
-/* ─── RENDER SIDEBAR ─── */
-function renderSB() {
-  var dd = document.getElementById('ptDropdown');
-  if (!dd) return;
-  var q = (document.getElementById('ptSearch') || {}).value || '';
-  var pts = DB.patients.slice().sort(function(a,b){
-    return (a.info.name||'').localeCompare(b.info.name||'');
-  });
-  var opts = '<option value="">— Select patient —</option>';
-  for (var i = 0; i < pts.length; i++) {
-    var p = pts[i];
-    var n = p.info.name || 'Unnamed';
-    if (q && n.toLowerCase().indexOf(q.toLowerCase()) < 0) continue;
-    var lastV = p.visits.length ? p.visits[p.visits.length-1] : null;
-    var cc = (lastV && lastV.chiefComplaint) ? lastV.chiefComplaint.slice(0, 32) : '';
-    var label = esc(n) + (cc ? '  —  ' + esc(cc) : '');
-    opts += '<option value="' + p.id + '"' + (CUR && CUR.id === p.id ? ' selected' : '') + '>'
-          + label + '</option>';
-  }
-  dd.innerHTML = opts;
-  if (CUR) dd.value = CUR.id;
+/* ─── PATIENT LIST (card view + search + filters) ─── */
+var PL_VISIBLE   = false;
+var PL_therapist = '';
+var PL_condition = '';
+var PL_sort      = 'recent';
+
+function plLastVisit(p){ return (p.visits && p.visits.length) ? p.visits[p.visits.length-1] : null; }
+function plLastDate(p){ var v = plLastVisit(p); return (v && v.date) ? v.date : ''; }
+function plHasUnpaid(p){
+  for (var i=0;i<p.visits.length;i++){ var b=p.visits[i].billing; if (b && b.items && b.items.length && b.status!=='paid') return true; }
+  return false;
+}
+function plHasRedFlag(p){
+  for (var i=0;i<p.visits.length;i++){ var rf=p.visits[i].msk && p.visits[i].msk.redFlags; if (rf){ for (var k in rf){ if (rf[k]==='1') return true; } } }
+  return false;
+}
+function plDistinct(field){
+  var seen={}, out=[];
+  for (var i=0;i<DB.patients.length;i++){ var val=(DB.patients[i].info && DB.patients[i].info[field])||''; if (val && !seen[val]){ seen[val]=1; out.push(val); } }
+  out.sort(function(a,b){ return a.localeCompare(b); });
+  return out;
 }
 
-function filterPts(q) { renderSB(); }
+function showPatientList(){ doCollect(); PL_VISIBLE=true; renderPatientList(); }
+function onSearchInput(){ if (!PL_VISIBLE) showPatientList(); else renderPatientList(); }
+function plSetTherapist(v){ PL_therapist=v; renderPatientList(); }
+function plSetCondition(v){ PL_condition=v; renderPatientList(); }
+function plSetSort(v){ PL_sort=v; renderPatientList(); }
 
-function selectPtFromDropdown(id) {
-  if (!id) return;
-  selectPt(id);
+/* renderSB() is called after every data change — keep the list fresh if shown */
+function renderSB(){ if (PL_VISIBLE) renderPatientList(); }
+
+function plOptions(values, current){
+  var h='<option value="">All</option><option value="__none__"'+(current==='__none__'?' selected':'')+'>— Unassigned —</option>';
+  for (var i=0;i<values.length;i++){ h+='<option value="'+esc(values[i])+'"'+(current===values[i]?' selected':'')+'>'+esc(values[i])+'</option>'; }
+  return h;
+}
+
+function renderPatientList(){
+  var area=document.getElementById('mainArea'); if(!area) return;
+  var q=((document.getElementById('ptSearch')||{}).value||'').trim().toLowerCase();
+  var list=DB.patients.filter(function(p){
+    var info=p.info||{};
+    if (PL_therapist){ var t=info.therapist||''; if (PL_therapist==='__none__' ? t!=='' : t!==PL_therapist) return false; }
+    if (PL_condition){ var c=info.condition||''; if (PL_condition==='__none__' ? c!=='' : c!==PL_condition) return false; }
+    if (q){ var hay=((info.name||'')+' '+(info.phone||'')+' '+(p.id||'')).toLowerCase(); if (hay.indexOf(q)<0) return false; }
+    return true;
+  });
+  list.sort(function(a,b){
+    if (PL_sort==='alpha')   return (a.info.name||'').localeCompare(b.info.name||'');
+    if (PL_sort==='unpaid')  return ((plHasUnpaid(b)?1:0)-(plHasUnpaid(a)?1:0))   || plLastDate(b).localeCompare(plLastDate(a));
+    if (PL_sort==='redflag') return ((plHasRedFlag(b)?1:0)-(plHasRedFlag(a)?1:0)) || plLastDate(b).localeCompare(plLastDate(a));
+    return plLastDate(b).localeCompare(plLastDate(a)); /* recent (default) */
+  });
+
+  var therapists=plDistinct('therapist'), conditions=plDistinct('condition');
+  var h='<div class="pl-wrap">';
+  h+='<div class="pl-head"><div class="pl-count">'+list.length+' patient'+(list.length===1?'':'s')+'</div>'
+    +'<div class="pl-filters">'
+    +'<label class="pl-f"><span>Therapist</span><select onchange="plSetTherapist(this.value)">'+plOptions(therapists,PL_therapist)+'</select></label>'
+    +'<label class="pl-f"><span>Condition</span><select onchange="plSetCondition(this.value)">'+plOptions(conditions,PL_condition)+'</select></label>'
+    +'<label class="pl-f"><span>Sort</span><select onchange="plSetSort(this.value)">'
+      +'<option value="recent"'+(PL_sort==='recent'?' selected':'')+'>Recent visit</option>'
+      +'<option value="unpaid"'+(PL_sort==='unpaid'?' selected':'')+'>Unpaid first</option>'
+      +'<option value="redflag"'+(PL_sort==='redflag'?' selected':'')+'>Red flag first</option>'
+      +'<option value="alpha"'+(PL_sort==='alpha'?' selected':'')+'>A–Z</option>'
+    +'</select></label>'
+    +'</div></div>';
+
+  if (!list.length){
+    h+='<div class="empty-s"><div class="es-icon">🔍</div><div class="es-txt">No matching patients</div><div class="es-sub">Adjust the search or filters, or tap ＋ New</div></div>';
+  } else {
+    h+='<div class="pl-list">';
+    for (var i=0;i<list.length;i++){
+      var p=list[i], info=p.info||{};
+      var nm=esc(info.name||'Unnamed');
+      var meta=[];
+      if (info.phone) meta.push('📞 '+esc(info.phone));
+      var ld=plLastDate(p); if (ld) meta.push('🗓 '+esc(ld));
+      var sub=[];
+      if (info.condition) sub.push(esc(info.condition));
+      if (info.therapist) sub.push(esc(info.therapist));
+      var badges='';
+      if (plHasRedFlag(p)) badges+='<span class="pl-badge pl-rf">⚑ Red flag</span>';
+      if (plHasUnpaid(p))  badges+='<span class="pl-badge pl-up">Unpaid</span>';
+      var initials=(info.name||'?').trim().charAt(0).toUpperCase()||'?';
+      h+='<button type="button" class="pt-card-btn" onclick="selectPt(\''+p.id+'\')">'
+        +'<span class="pt-card-av">'+esc(initials)+'</span>'
+        +'<span class="pt-card-body">'
+          +'<span class="pt-card-nm">'+nm+'</span>'
+          +(meta.length?'<span class="pt-card-meta">'+meta.join('  ·  ')+'</span>':'')
+          +(sub.length?'<span class="pt-card-sub">'+sub.join('  ·  ')+'</span>':'')
+        +'</span>'
+        +(badges?'<span class="pt-card-badges">'+badges+'</span>':'')
+      +'</button>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+  area.innerHTML=h;
 }
 
 function toggleServerPanel() {
@@ -581,7 +680,7 @@ function renderMain() {
   var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
   var tabHtml = '';
   for (var i = 0; i < TABS.length; i++) {
-    tabHtml += '<span class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px">'+TABS[i][2]+'</span>'+TABS[i][1]+'</span>';
+    tabHtml += '<button type="button" role="tab" aria-selected="'+(TABS[i][0]===CT?'true':'false')+'" class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px" aria-hidden="true">'+TABS[i][2]+'</span>'+TABS[i][1]+'</button>';
   }
 
   document.getElementById('mainArea').innerHTML =
@@ -609,8 +708,8 @@ function switchTab(name, el) {
   doCollect();
   CT = name;
   var tabs = document.querySelectorAll('.tb');
-  for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('on');
-  if (el) el.classList.add('on');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].classList.remove('on'); tabs[i].setAttribute('aria-selected','false'); }
+  if (el) { el.classList.add('on'); el.setAttribute('aria-selected','true'); }
   renderTab(name);
 }
 
@@ -721,15 +820,18 @@ function fsel(f,val,opts){
 function rInfo(v,pi) {
   return '<form id="ptForm" onsubmit="return false">'
   +'<div class="card"><div class="ch"><div class="ci" style="background:#E0F2FE">👤</div><div><div class="ct">Patient details</div></div></div><div class="cb">'
-  +'<div class="g3"><div class="fld"><label>Full name</label><input data-info="name" value="'+esc(pi.name||'')+'" oninput="doCollect()" type="text"></div>'
-  +'<div class="fld"><label>Age</label><input data-info="age" value="'+esc(pi.age||'')+'" oninput="doCollect()" type="text" placeholder="e.g. 34"></div>'
+  +'<div class="g3"><div class="fld"><label for="info_name">Full name</label><input id="info_name" data-info="name" value="'+esc(pi.name||'')+'" oninput="doCollect()" type="text"></div>'
+  +'<div class="fld"><label for="info_age">Age</label><input id="info_age" data-info="age" value="'+esc(pi.age||'')+'" oninput="doCollect()" type="text" placeholder="e.g. 34"></div>'
   +'<div class="fld"><label>Gender</label>'+fselInfo('gender',pi.gender||'',['Male','Female','Other'])+'</div></div>'
-  +'<div class="g3"><div class="fld"><label>Location / City</label><input data-info="location" value="'+esc(pi.location||'')+'" oninput="doCollect()" type="text" placeholder="e.g. Hyderabad"></div>'
-  +'<div class="fld"><label>Occupation / Sport</label><input data-info="occupation" value="'+esc(pi.occupation||'')+'" oninput="doCollect()" type="text"></div>'
-  +'<div class="fld"><label>Phone</label><input data-info="phone" value="'+esc(pi.phone||'')+'" oninput="doCollect()" type="tel" placeholder="Phone number"></div></div>'
+  +'<div class="g3"><div class="fld"><label for="info_location">Location / City</label><input id="info_location" data-info="location" value="'+esc(pi.location||'')+'" oninput="doCollect()" type="text" placeholder="e.g. Hyderabad"></div>'
+  +'<div class="fld"><label for="info_occupation">Occupation / Sport</label><input id="info_occupation" data-info="occupation" value="'+esc(pi.occupation||'')+'" oninput="doCollect()" type="text"></div>'
+  +'<div class="fld"><label for="info_phone">Phone</label><input id="info_phone" data-info="phone" value="'+esc(pi.phone||'')+'" oninput="doCollect()" type="tel" placeholder="Phone number"></div></div>'
   +'<div class="g3"><div class="fld"><label>Visit date</label>'+fd('date',v.date)+'</div>'
-  +'<div class="fld"><label>Email</label><input data-info="email" value="'+esc(pi.email||'')+'" oninput="doCollect()" type="email" placeholder="name@email.com"></div>'
-  +'<div class="fld"><label>Referred by</label><input data-info="referredBy" value="'+esc(pi.referredBy||'')+'" oninput="doCollect()" type="text" placeholder="GP, specialist, self..."></div></div>'
+  +'<div class="fld"><label for="info_email">Email</label><input id="info_email" data-info="email" value="'+esc(pi.email||'')+'" oninput="doCollect()" type="email" placeholder="name@email.com"></div>'
+  +'<div class="fld"><label for="info_referredBy">Referred by</label><input id="info_referredBy" data-info="referredBy" value="'+esc(pi.referredBy||'')+'" oninput="doCollect()" type="text" placeholder="GP, specialist, self..."></div></div>'
+  +'<div class="g2"><div class="fld"><label>Treating therapist</label>'+fselInfo('therapist',pi.therapist||'',Object.keys(THERAPISTS))+'</div>'
+  +'<div class="fld"><label for="info_condition">Primary condition</label><input id="info_condition" data-info="condition" value="'+esc(pi.condition||'')+'" oninput="doCollect()" type="text" placeholder="e.g. Low back pain, Frozen shoulder" list="conditionList"></div></div>'
+  +'<datalist id="conditionList">'+plDistinct('condition').map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist>'
   +'</div></div>'
   +'<div class="card"><div class="ch"><div class="ci" style="background:#FAEEDA">📋</div><div><div class="ct">Chief complaint</div></div></div><div class="cb">'
   +'<div class="fld">'+ft('chiefComplaint',v.chiefComplaint,'Main complaint, body region, side...',72)+'</div>'
@@ -1176,12 +1278,13 @@ function rMSK(v) {
   for(var ri=0;ri<rfList.length;ri++){
     var rfKey=rfList[ri][0]; var rfLabel=rfList[ri][1];
     var isChecked=(rf[rfKey]==='1');
-    /* iOS fix: use div+onclick, not label+input+onchange */
-    rfHtml+='<div onclick="toggleRedFlag(\''+rfKey+'\')" style="display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;border:1.5px solid '+(isChecked?'#E24B4A':'var(--brd)')+';background:'+(isChecked?'#FCEBEB':'var(--card)')+';cursor:pointer;-webkit-tap-highlight-color:transparent">'
-        +'<div style="width:22px;height:22px;border-radius:6px;border:2px solid '+(isChecked?'#A32D2D':'var(--brd)')+';background:'+(isChecked?'#A32D2D':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
-        +(isChecked?'<span style="color:#fff;font-weight:800;font-size:13px;line-height:1">✓</span>':'')+'</div>'
+    /* Real button + role=checkbox so it is keyboard-operable and announced
+       correctly by screen readers — these are safety-relevant data. */
+    rfHtml+='<button type="button" role="checkbox" aria-checked="'+(isChecked?'true':'false')+'" onclick="toggleRedFlag(\''+rfKey+'\')" style="display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;border:1.5px solid '+(isChecked?'#E24B4A':'var(--brd)')+';background:'+(isChecked?'#FCEBEB':'var(--card)')+';cursor:pointer;-webkit-tap-highlight-color:transparent;width:100%;text-align:left;font-family:inherit">'
+        +'<span style="width:22px;height:22px;border-radius:6px;border:2px solid '+(isChecked?'#A32D2D':'var(--brd)')+';background:'+(isChecked?'#A32D2D':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0" aria-hidden="true">'
+        +(isChecked?'<span style="color:#fff;font-weight:800;font-size:13px;line-height:1">✓</span>':'')+'</span>'
         +'<span style="font-size:12px;font-weight:500;color:'+(isChecked?'#7A1A1A':'var(--text)')+'">'+rfLabel+'</span>'
-        +'</div>';
+        +'</button>';
   }
   rfHtml+='</div>';
   return '<form id="ptForm" onsubmit="return false">'
@@ -1284,7 +1387,7 @@ function rVM(v) {
     var ok = VM_ORGANS[oi].key;
     var od = vm.organs && vm.organs[ok];
     if (od && (od.tender || od.mobility || od.motility || od.findings || od.mskCorr)) {
-      chips += '<span onclick="selectVMOrgan(\''+ok+'\')" style="display:inline-block;margin:2px 4px 2px 0;padding:3px 9px;border-radius:20px;background:var(--tlL);color:var(--tl);font-size:10px;font-weight:600;cursor:pointer">'+VM_ORGANS[oi].name+'</span>';
+      chips += '<button type="button" onclick="selectVMOrgan(\''+ok+'\')" style="display:inline-block;margin:2px 4px 2px 0;padding:3px 9px;border-radius:20px;border:none;background:var(--tlL);color:var(--tl);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit">'+VM_ORGANS[oi].name+'</button>';
     }
   }
 
@@ -2152,10 +2255,22 @@ function escHtml(s){
    • Smart merge: never overwrites newer data with older data
    ═══════════════════════════════════════════════════════════════ */
 
-var SERVER_URL = '';
-var IS_ONLINE  = false;   /* true only when server is confirmed reachable */
+var SERVER_URL   = '';
+var SERVER_TOKEN = '';
+var IS_ONLINE    = false;   /* true only when server is confirmed reachable */
 
-try { SERVER_URL = localStorage.getItem('bm_server_url') || ''; } catch(e) {}
+try { SERVER_URL   = localStorage.getItem('bm_server_url')   || ''; } catch(e) {}
+try { SERVER_TOKEN = localStorage.getItem('bm_server_token') || ''; } catch(e) {}
+/* Migrate: older builds stored the token inside the URL (?token=…). Move it
+   into its own masked field so it is never shown on screen or in screenshots. */
+(function migrateToken(){
+  var m = SERVER_URL.match(/[?&]token=([^&]+)/);
+  if (m) {
+    if (!SERVER_TOKEN) { SERVER_TOKEN = decodeURIComponent(m[1]); try { localStorage.setItem('bm_server_token', SERVER_TOKEN); } catch(e) {} }
+    SERVER_URL = SERVER_URL.split('?')[0];
+    try { localStorage.setItem('bm_server_url', SERVER_URL); } catch(e) {}
+  }
+})();
 
 /* ── Timestamp every save ── */
 function sv() {
@@ -2218,25 +2333,52 @@ function mergePatients(local, remote) {
   return result;
 }
 
-/* ── Build API URL — appends ?token= if present in the saved URL ── */
-function apiUrl(endpoint) {
-  var base = SERVER_URL.replace(/\/$/, '');
-  /* If the URL itself contains ?token=xxx, extract and reuse it */
-  var tokenMatch = base.match(/[?&]token=([^&]+)/);
-  var token = tokenMatch ? tokenMatch[1] : '';
-  var cleanBase = base.split('?')[0];
-  return cleanBase + endpoint + (token ? '?token=' + encodeURIComponent(token) : '');
+/* ── Token source: prefer the dedicated field, fall back to a token still
+   embedded in the URL (pre-migration / pasted full URL) ── */
+function authToken() {
+  if (SERVER_TOKEN) return SERVER_TOKEN;
+  var m = SERVER_URL.match(/[?&]token=([^&]+)/);
+  return m ? decodeURIComponent(m[1]) : '';
 }
 
-/* ── Server URL ── */
+/* ── Build API URL. Token still appended as a query param for compatibility
+   with the current backend; also sent as an Authorization header (see
+   authHeaders) so the server can switch to header-only auth later. ── */
+function apiUrl(endpoint) {
+  var base = SERVER_URL.replace(/\/$/, '').split('?')[0];
+  var token = authToken();
+  return base + endpoint + (token ? '?token=' + encodeURIComponent(token) : '');
+}
+
+/* ── Request headers, including bearer token when present ── */
+function authHeaders(extra) {
+  var h = extra || {};
+  var token = authToken();
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  return h;
+}
+
+/* ── Server URL / token ── */
 function saveServerUrl(v) {
   SERVER_URL = v.trim();
   try { localStorage.setItem('bm_server_url', SERVER_URL); } catch(e) {}
+}
+function saveServerToken(v) {
+  SERVER_TOKEN = v.trim();
+  try { localStorage.setItem('bm_server_token', SERVER_TOKEN); } catch(e) {}
+}
+function toggleTokenVisibility() {
+  var el = document.getElementById('serverToken');
+  if (!el) return;
+  el.type = (el.type === 'password') ? 'text' : 'password';
 }
 
 function initServerUI() {
   var el = document.getElementById('serverUrl');
   if (el && SERVER_URL) el.value = SERVER_URL;
+  var tk = document.getElementById('serverToken');
+  if (tk && SERVER_TOKEN) tk.value = SERVER_TOKEN;
+  updateBackupInfo();
   /* Restore last synced timestamp */
   try {
     var ls = localStorage.getItem('bm_last_sync');
@@ -2313,7 +2455,7 @@ function syncServer(silent) {
 
   fetch(apiUrl('/sync'), {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body:    JSON.stringify({ patients: toSend, clinic: DB.clinic, deletedIds: DB.deletedIds || [] })
   })
   .then(function(r) {
@@ -2386,7 +2528,7 @@ function syncServer(silent) {
 /* ── Silent background ping to check connectivity ── */
 function pingServer() {
   if (!SERVER_URL) return;
-  fetch(apiUrl('/ping'), { method: 'GET' })
+  fetch(apiUrl('/ping'), { method: 'GET', headers: authHeaders() })
     .then(function(r) {
       if (r.ok) {
         _serverOk = true;
@@ -2420,7 +2562,27 @@ function exportJSON() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
   try { localStorage.setItem('bm_last_export', new Date().toISOString()); } catch(e) {}
+  updateBackupInfo();
   showToast('Backup downloaded ✓');
+}
+
+/* Whole days since the last export, or null if never exported */
+function backupDaysAgo() {
+  var last = null;
+  try { last = localStorage.getItem('bm_last_export'); } catch(e) {}
+  if (!last) return null;
+  return Math.floor((Date.now() - new Date(last).getTime()) / (24*60*60*1000));
+}
+function backupAgoText() {
+  var d = backupDaysAgo();
+  if (d === null) return 'never';
+  if (d <= 0) return 'today';
+  if (d === 1) return '1 day ago';
+  return d + ' days ago';
+}
+function updateBackupInfo() {
+  var el = document.getElementById('backupInfo');
+  if (el) el.textContent = 'Last backup: ' + backupAgoText();
 }
 
 function importJSON(input) {
@@ -2727,19 +2889,24 @@ function cycleTheme() {
 /* ─── BACKUP REMINDER ─── */
 function maybeBackupReminder() {
   if (!DB.patients.length) return;
-  var last = null;
-  try { last = localStorage.getItem('bm_last_export'); } catch(e) {}
-  var stale = !last || (Date.now() - new Date(last).getTime() > 7*24*60*60*1000);
-  if (stale) setTimeout(function(){ showToast('Tip: export a backup (⬇) to keep your records safe', true); }, 4000);
+  var d = backupDaysAgo();
+  var stale = (d === null) || (d >= 7);
+  if (stale) setTimeout(function(){
+    var msg = (d === null)
+      ? 'No backup yet — export (⬇) to keep your records safe'
+      : 'Last backup ' + backupAgoText() + ' — export (⬇) to stay safe';
+    showToast(msg, true);
+  }, 4000);
 }
 
 /* ─── INIT ─── */
 applyTheme();
-renderSB();
 initServerUI();
 updateSyncBadge();
 initTherapistUI();
 maybeBackupReminder();
+/* Land on the patient list when there are patients and none is open */
+if (!CUR && DB.patients.length) showPatientList();
 /* Ping server on load — silently checks if we're at home on Wi-Fi */
 if (SERVER_URL) setTimeout(pingServer, 600);
 /* Pull latest data from the server shortly after load (and push anything dirty) */
