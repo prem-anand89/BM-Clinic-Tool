@@ -601,9 +601,10 @@ function renderPatientList(){
     return true;
   });
   list.sort(function(a,b){
+    if (PL_sort==='oldest')  return plLastDate(a).localeCompare(plLastDate(b));
     if (PL_sort==='alpha')   return (a.info.name||'').localeCompare(b.info.name||'');
-    if (PL_sort==='unpaid')  return ((plHasUnpaid(b)?1:0)-(plHasUnpaid(a)?1:0))   || plLastDate(b).localeCompare(plLastDate(a));
-    if (PL_sort==='redflag') return ((plHasRedFlag(b)?1:0)-(plHasRedFlag(a)?1:0)) || plLastDate(b).localeCompare(plLastDate(a));
+    if (PL_sort==='zalpha')  return (b.info.name||'').localeCompare(a.info.name||'');
+    if (PL_sort==='mostv')   return (b.visits.length - a.visits.length);
     return plLastDate(b).localeCompare(plLastDate(a)); /* recent (default) */
   });
 
@@ -615,9 +616,10 @@ function renderPatientList(){
     +'<label class="pl-f"><span>Condition</span><select onchange="plSetCondition(this.value)">'+plOptions(conditions,PL_condition)+'</select></label>'
     +'<label class="pl-f"><span>Sort</span><select onchange="plSetSort(this.value)">'
       +'<option value="recent"'+(PL_sort==='recent'?' selected':'')+'>Recent visit</option>'
-      +'<option value="unpaid"'+(PL_sort==='unpaid'?' selected':'')+'>Unpaid first</option>'
-      +'<option value="redflag"'+(PL_sort==='redflag'?' selected':'')+'>Red flag first</option>'
-      +'<option value="alpha"'+(PL_sort==='alpha'?' selected':'')+'>A–Z</option>'
+      +'<option value="oldest"'+(PL_sort==='oldest'?' selected':'')+'>Oldest visit</option>'
+      +'<option value="alpha"'+(PL_sort==='alpha'?' selected':'')+'>Name A–Z</option>'
+      +'<option value="zalpha"'+(PL_sort==='zalpha'?' selected':'')+'>Name Z–A</option>'
+      +'<option value="mostv"'+(PL_sort==='mostv'?' selected':'')+'>Most visits</option>'
     +'</select></label>'
     +'</div></div>';
 
