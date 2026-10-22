@@ -2098,7 +2098,7 @@ function buildNoteHTML() {
     +'<div class="rx-foot">'
     +'<div><div class="ft-dr">'+tName+'</div>'
     +(tReg?'<div class="ft-sub">'+escHtml(tReg)+'</div>':'')
-    +'<div class="ft-sub">Beyond Mechanics Physical Therapy</div></div>'
+    +'<div class="ft-sub">'+escHtml(cl.name||'Beyond Mechanics')+'</div></div>'
     +'<div class="ft-date">Date: '+escHtml(v.date||'')+'<br>'+(CV===0?'Initial visit':'Follow-up '+CV)+'</div>'
     +'</div>'
     +'</div></body></html>';
