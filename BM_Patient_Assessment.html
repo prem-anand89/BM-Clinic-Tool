@@ -337,7 +337,7 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 var DB = {
   patients: [],
   deletedIds: [],  /* IDs deleted locally — sent to server on sync */
-  clinic: {name:'Beyond Mechanics',therapist:'',address:'Healthvalley Hospital, Kondapur, Hitech City',phone:'9032323890 / 6303896974',email:'beyondmechanicspt@gmail.com',currency:'₹',taxRate:0,taxLabel:'GST'}
+  clinic: {name:'Beyond Mechanics',therapist:'',address:'',phone:'',email:'',currency:'₹',taxRate:0,taxLabel:'GST'}
 };
 try {
   var _s = localStorage.getItem('bm_v6');
@@ -2035,9 +2035,9 @@ function buildNoteHTML() {
   var tName  = tp.displayName  || escHtml(cl.therapist||'');
   var tQL1   = tp.qualLine1    || '';
   var tQL2   = tp.qualLine2    || '';
-  var tAddr  = cl.address || 'Healthvalley Hospital, Kondapur, Hitech City';
-  var tPhone = tp.phone  || cl.phone || '';
-  var tEmail = tp.email  || cl.email || 'beyondmechanicspt@gmail.com';
+  var tAddr  = cl.address || '';
+  var tPhone = cl.phone || tp.phone || '';
+  var tEmail = cl.email || tp.email || '';
   var tReg   = tp.regNo  || '';
 
   var printStyles = [
@@ -2077,8 +2077,8 @@ function buildNoteHTML() {
     +'<div class="clinic-tagline">Breaking the cycle of Pain, Discomfort &amp; Dysfunction</div>'
     +'<div class="clinic-specs">Fascial Manipulation &middot; Visceral Manipulation &middot; Craniosacral Therapy &middot; Mulligan MWM &middot; Neurodynamics &middot; Taping</div>'
     +'<div class="clinic-contact">'
-    +'<div class="cc-row">&#128205; '+escHtml(tAddr)+'</div>'
-    +'<div class="cc-row">&#128222; '+escHtml(tPhone)+'&nbsp;&nbsp;&#9993; '+escHtml(tEmail)+'</div>'
+    +(tAddr?'<div class="cc-row">&#128205; '+escHtml(tAddr)+'</div>':'')
+    +((tPhone||tEmail)?'<div class="cc-row">'+(tPhone?'&#128222; '+escHtml(tPhone):'')+(tPhone&&tEmail?'&nbsp;&nbsp;':'')+(tEmail?'&#9993; '+escHtml(tEmail):'')+'</div>':'')
     +'</div>'
     +'</div>'
     +'<div class="rx-right">'
