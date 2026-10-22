@@ -54,7 +54,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* Laptop / desktop only (>=1024px): widen the column so tables and forms
    breathe. iPad portrait (768px) and phones stay below this breakpoint and
    are completely unaffected. */
-@media(min-width:1024px){.wrap{max-width:1150px;padding:14px 18px 60px}}
+@media(min-width:1024px){.wrap{max-width:1280px;padding:20px 28px 70px}}
+@media(min-width:1500px){.wrap{max-width:1400px}}
 .clinic-hdr{background:var(--bd);border-radius:16px;padding:15px 18px 13px;margin-bottom:12px;color:#fff;position:relative;overflow:hidden}
 .clinic-hdr::before{content:'';position:absolute;right:-20px;top:-20px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05);pointer-events:none}
 .ch-top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
@@ -62,6 +63,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .ch-name{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em}
 .ch-tag{font-size:10px;color:rgba(255,255,255,.65);margin-top:2px}
 .ch-tagline{font-size:10px;font-style:italic;color:rgba(255,255,255,.8);margin-top:3px;letter-spacing:.01em}
+.ch-contact{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:7px}
+.ch-contact span{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;color:rgba(255,255,255,.62);line-height:1.4}
 .ch-badge{margin-left:auto;padding:3px 10px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.16);border-radius:20px;font-size:10px;font-weight:600;color:rgba(255,255,255,.75)}
 @media(max-width:480px){
   .clinic-hdr{padding:10px 13px 9px}
@@ -189,12 +192,11 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .vm-g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:9px}
 .att-em{padding:24px;text-align:center;border:1.5px dashed var(--brd);border-radius:10px;color:var(--muted);font-size:11px}
 /* ─── PATIENT TOP BAR ─── */
-.pt-bar{display:flex;align-items:center;gap:7px;background:var(--card);border:1.5px solid var(--brd);border-radius:12px;padding:8px 10px;margin-bottom:8px;flex-wrap:wrap}
-.pt-bar-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.pt-bar{display:flex;align-items:center;gap:7px;background:var(--card);border:1.5px solid var(--brd);border-radius:12px;padding:8px 10px;margin-bottom:16px;flex-wrap:wrap}
+.pt-bar-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0;position:relative}
 .pt-sel-wrap{position:relative;flex:1;min-width:0;max-width:320px;display:flex;align-items:center}
 .pt-sel-wrap select{width:100%}
 .pt-bar-right{display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
-@media(max-width:520px){.pt-bar{gap:5px}}
 /* ─── PATIENT CARD LIST ─── */
 .pl-wrap{max-width:780px;margin:0 auto}
 .pl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -215,10 +217,7 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
 .pl-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
 .pl-rf{background:#FCEBEB;color:#C0392B}
 .pl-up{background:#FFF3E0;color:#B26A00}
-/* Hide sub-text spans inside action buttons (including last-synced label) on
-   anything narrower than a desktop — keeps all buttons the same height and
-   prevents the Sync button from being taller than its neighbours. */
-@media(max-width:1023px){.pt-bar-right .abtn span:not(#dirtyBadge){display:none}}
+@media(max-width:520px){.pt-bar{gap:5px}.pt-bar-right .abtn span:not(#dirtyBadge){display:none}}
 /* Two-column flow on laptops only (>=1024px). Form-heavy tabs add .colflow to
    their form; wide content (tables, charts) gets .fullspan to span both
    columns so it is never squeezed. iPad/phone stay single-column. */
@@ -229,20 +228,31 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
   .colflow{column-count:2}
   .colflow .fullspan{column-span:all}
 }
-/* Larger, more legible type on laptops (the base sizes are tuned for phones).
-   Untouched on tablet/phone. */
+/* Larger, more legible type + roomier spacing on laptops/desktops.
+   The base sizes are tuned for phones; tablet/phone stay untouched. */
 @media(min-width:1024px){
-  input,select,textarea{font-size:14px;padding:10px 12px}
-  label{font-size:10px}
-  .ct{font-size:13px}.cs{font-size:11px}
-  .cb{padding:15px 16px}
-  .fld{margin-bottom:12px}
-  textarea{line-height:1.65}
-  .tb{font-size:12px;padding:8px 14px}
-  .vp{font-size:11px}
-  .inote{font-size:12px}
-  .fm-t,.pv-t,.hist-t,.vm-t{font-size:12px}
-  .fm-t td input,.fm-t td select,.hist-t td input,.vm-t td input,.vm-t td select{font-size:12px}
+  input,select,textarea{font-size:15px;padding:11px 13px}
+  label{font-size:10.5px;margin-bottom:5px}
+  .ct{font-size:14.5px}.cs{font-size:11.5px}
+  .ch{padding:13px 18px}
+  .cb{padding:18px 20px}
+  .card{margin-bottom:14px;border-radius:16px}
+  .colflow{column-gap:20px}
+  .fld{margin-bottom:14px}
+  .g2{gap:14px;margin-bottom:14px}
+  .g3{gap:12px;margin-bottom:14px}
+  textarea{line-height:1.7}
+  .ci{width:30px;height:30px;font-size:15px}
+  .tab-bar{gap:6px;margin-bottom:14px}
+  .tb{font-size:13px;padding:9px 16px;min-height:40px}
+  .vp{font-size:11.5px;padding:5px 13px;min-height:30px}
+  .inote{font-size:12.5px;padding:11px 14px}
+  .pt-nm{font-size:18px}
+  .abtn{font-size:12px;padding:8px 13px;min-height:38px}
+  .fm-t,.pv-t,.hist-t,.vm-t{font-size:12.5px}
+  .fm-t td input,.fm-t td select,.hist-t td input,.vm-t td input,.vm-t td select{font-size:12.5px}
+  .fm-t th,.hist-t th,.vm-t th{font-size:10px}
+  .btr{font-size:13px}
 }
 </style>
 </head>
@@ -254,6 +264,7 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
     <div style="flex:1">
       <div class="ch-name" style="font-size:18px;letter-spacing:.5px;text-transform:uppercase">BEYOND MECHANICS</div>
       <div class="ch-tagline">Breaking the cycle of Pain, Discomfort &amp; Dysfunction</div>
+      <div class="ch-contact" id="hdrContact"></div>
     </div>
     <div style="text-align:right;flex-shrink:0;min-width:0" id="hdrTherapistBlock">
       <div id="therapistLabel" style="font-size:12px;font-weight:700;color:#fff;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
@@ -274,10 +285,13 @@ hr.div{border:none;border-top:1px solid var(--brd);margin:12px 0}
     <button class="abtn" onclick="exportJSON()" title="Export backup">⬇</button>
     <button class="abtn" onclick="document.getElementById('importFile').click()" title="Import backup">⬆</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(this)">
-    <button class="abtn sb-sync" id="syncBtn" onclick="syncServer()" title="Sync server">
-      <div class="sb-main">⟳ Sync<span id="dirtyBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:20px;font-size:9px;padding:1px 5px;font-weight:700;margin-left:2px">●</span></div>
-      <span id="lastSyncedLabel"></span>
-    </button>
+    <div style="position:relative;display:flex;align-items:center">
+      <button class="abtn sb-sync" id="syncBtn" onclick="syncServer()" title="Sync server" style="white-space:nowrap">
+        ⟳ Sync
+        <span id="dirtyBadge" style="display:none;background:#E24B4A;color:#fff;border-radius:20px;font-size:9px;padding:1px 5px;font-weight:700;margin-left:2px">●</span>
+      </button>
+      <span id="lastSyncedLabel" style="position:absolute;top:100%;right:0;margin-top:1px;font-size:9px;color:var(--sub);white-space:nowrap;pointer-events:none"></span>
+    </div>
     <button class="abtn" onclick="cycleTheme()" title="Theme: Auto / Light / Dark" id="themeBtn">🌓</button>
     <button class="abtn" onclick="toggleServerPanel()" title="Server settings" id="srvToggle">⚙</button>
   </div>
@@ -537,6 +551,7 @@ function doCollect() {
 
   var clEls = f.querySelectorAll('[data-cl]');
   for (var i = 0; i < clEls.length; i++) { DB.clinic[clEls[i].dataset.cl] = clEls[i].value; }
+  if (clEls.length && typeof renderClinicHeader === 'function') renderClinicHeader();
 
   var infoKeys = ['name','age','gender','occupation','location','referredBy','phone','email','therapist','condition'];
   for (var i = 0; i < infoKeys.length; i++) {
@@ -679,7 +694,7 @@ function renderMain() {
     pills += '<span class="vp'+(i===CV?' on':'')+'" onclick="switchVisit('+i+')">'+(i===0?'Initial':'FU '+i)+' &middot; '+vi.date+(viNRS?'<span'+viCol+'>'+viNRS+'</span>':'')+'</span>';
   }
 
-  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(15,true)],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
+  var TABS = [['dash','Overview','📈'],['info','Info','👤'],['body','Body chart','🩻'],['nrs','Pain NRS','📊'],['msk','Assessment','🩺'],['fm','FM',fmLogoSVG(16,false)],['vm','VM','🫀'],['cst','CST','🧠'],['treatment','Treatment','💪'],['files','Files','📎'],['billing','Billing','🧾']];
   var tabHtml = '';
   for (var i = 0; i < TABS.length; i++) {
     tabHtml += '<button type="button" role="tab" aria-selected="'+(TABS[i][0]===CT?'true':'false')+'" class="tb'+(TABS[i][0]===CT?' on':'')+'" onclick="switchTab(\''+TABS[i][0]+'\',this)"><span style="margin-right:5px" aria-hidden="true">'+TABS[i][2]+'</span>'+TABS[i][1]+'</button>';
@@ -791,8 +806,8 @@ function openVisit(i){ CT='info'; switchVisit(i); }
 /* Circle · winged figure · dashed spine · fascial diagonal diamonds.
    mono=true uses currentColor so it adapts to active/inactive tab colours. */
 function fmLogoSVG(size, mono) {
-  var navy = mono ? 'currentColor' : '#1c3a52';
-  var teal = mono ? 'currentColor' : '#2f7d6b';
+  var navy = mono ? 'currentColor' : '#3f7cc0';
+  var teal = mono ? 'currentColor' : '#1f9e84';
   return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle">'
     +'<circle cx="32" cy="32" r="29" stroke="'+navy+'" stroke-width="2.5"/>'
     +'<circle cx="32" cy="15" r="4.2" stroke="'+teal+'" stroke-width="2.2"/>'
@@ -2861,6 +2876,7 @@ function setTherapist(name) {
     qLbl.innerHTML = ql.length ? ql.join('<br>') : (profile.qualifications||'').replace(/\|/g,'<br>');
   }
   if (pLbl) pLbl.textContent = profile.phone || '';
+  if (typeof renderClinicHeader === 'function') renderClinicHeader();
   /* Re-render info tab so dropdowns update immediately */
   if (typeof CT !== 'undefined' && CT === 'info' && CUR) renderTab('info');
 }
@@ -2869,6 +2885,17 @@ function initTherapistUI() {
   if (DB.clinic.therapist) setTherapist(DB.clinic.therapist);
 }
 
+/* Fill the clinic header contact row (location · phone · email) with icons */
+function renderClinicHeader() {
+  var el = document.getElementById('hdrContact');
+  if (!el) return;
+  var cl = DB.clinic || {};
+  var parts = [];
+  if (cl.address) parts.push('<span>📍 '+escHtml(cl.address)+'</span>');
+  if (cl.phone)   parts.push('<span>📞 '+escHtml(cl.phone)+'</span>');
+  if (cl.email)   parts.push('<span>✉️ '+escHtml(cl.email)+'</span>');
+  el.innerHTML = parts.join('');
+}
 
 /* ─── THEME (Auto / Light / Dark) ─── */
 function applyTheme() {
@@ -2906,6 +2933,7 @@ applyTheme();
 initServerUI();
 updateSyncBadge();
 initTherapistUI();
+renderClinicHeader();
 maybeBackupReminder();
 /* Land on the patient list when there are patients and none is open */
 if (!CUR && DB.patients.length) showPatientList();
